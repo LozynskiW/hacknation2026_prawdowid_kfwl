@@ -1,0 +1,2 @@
+# hacknation2026_prawdowid_kfwl
+Implementacja projektu Prawdowid na HackNation2026
