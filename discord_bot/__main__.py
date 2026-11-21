@@ -7,7 +7,7 @@ from .config import BotSettings
 
 
 def main() -> None:
-    # Logujemy tylko metadane (ID rozmowy, czasy, itp.), nie treść wiadomości ani wyniki sprawdzeń.
+    # Logujemy tylko metadane (ID rozmowy, czasy) – nigdy treści wiadomości użytkowników.
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     settings = BotSettings()  # type: ignore[call-arg]
     bot = PrawdowidBot(settings)
