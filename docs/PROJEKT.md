@@ -42,7 +42,7 @@ Plik źródłowy: `config/whitelist.txt`, katalog z metadanymi: `config/sources.
 ## Kanały
 - **WWW** – responsywny interfejs (MVP).
 - **Discord** – bot korzystający z tego samego API (drugi kanał MVP).
-- **WhatsApp** – adapter demonstracyjny / docelowo.
+- **Inny komunikator** 
 
 Ten sam input przez dowolny kanał daje ten sam wynik merytoryczny.
 
