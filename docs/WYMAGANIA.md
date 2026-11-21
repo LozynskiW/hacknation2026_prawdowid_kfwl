@@ -163,9 +163,9 @@
 ## Warunek brzegowy (§8)
 
 Projekt dostaje punkty za funkcje premiowane tylko wtedy, gdy spełnia wszystkie cztery warunki:
-- działa end-to-end bez ręcznej ingerencji twórców (FR-06, NFR-04);
-- nie zawiera sfabrykowanych źródeł (FR-20, FR-44);
-- poprawnie wstrzymuje się od rozstrzygnięcia przy braku dowodów (FR-33);
+- działa end-to-end bez ręcznej ingerencji twórców (FR-06, NFR-04),
+- nie zawiera sfabrykowanych źródeł (FR-20, FR-44),
+- poprawnie wstrzymuje się od rozstrzygnięcia przy braku dowodów (FR-33),
 - ma dwa działające kanały albo jeden kanał i adapter demonstracyjny (FR-03, FR-04).
 
 ## Mapowanie scenariuszy testowych jury (§6) na wymagania
