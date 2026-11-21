@@ -305,6 +305,7 @@ body {
 }
 
 .result__summary p { margin: 0; }
+.result__summary .result__tally { margin-top: 8px; font-size: .85em; color: var(--muted); }
 
 /* Statusy niewerdyktowe: przerywana ramka zamiast koloru werdyktu. */
 .result--notice { border-style: dashed; border-color: var(--muted); }
@@ -345,7 +346,17 @@ body {
   font-size: .9em;
 }
 
+.claim__confidence {
+  margin-left: 4px;
+  font-size: .75em;
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .claim__text { margin: 0 0 16px; font-size: 1.2em; line-height: 1.4; }
+
+/* Krotka odpowiedz skilla - pierwsza rzecz do przeczytania pod twierdzeniem. */
+.claim__answer { margin: 0 0 16px; font-weight: 700; }
 
 .claim__meaning {
   padding: 14px 18px;

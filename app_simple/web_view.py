@@ -36,6 +36,17 @@ def _claims_word(n: int) -> str:
     return "twierdzeń"
 
 
+def _percent(confidence) -> str:
+    """0.98 -> "98%". Brak lub zła wartość -> pusty tekst (nie pokazujemy)."""
+    try:
+        value = float(confidence)
+    except (TypeError, ValueError):
+        return ""
+    if value <= 1:
+        value *= 100
+    return f"{round(min(max(value, 0), 100))}%"
+
+
 def _verdict(claim: dict) -> str:
     outcome = claim.get("outcome") or {}
     if outcome.get("kind") == "NOT_CHECKABLE":
@@ -75,6 +86,8 @@ def to_template_context(result: dict, question: str) -> dict:
         claims.append({
             "text": c.get("text", ""),
             "label": LABELS.get(verdict, verdict),
+            "short_answer": c.get("shortAnswer") or "",
+            "confidence": _percent(c.get("confidence")),
             "explanation": c.get("explanation", ""),
             "sources": sources,
             "warnings": [w.get("message", "") for w in c.get("warnings") or [] if w.get("message")],
@@ -83,7 +96,8 @@ def to_template_context(result: dict, question: str) -> dict:
 
     total = len(claims)
     parts = [f"{n} {SUMMARY_WORDS.get(v, v)}" for v, n in counts.items()]
-    summary = f"Sprawdzono {total} {_claims_word(total)}: {', '.join(parts)}." if total else ""
-    view = {"summary": summary, "claims": claims}
+    tally = f"Sprawdzono {total} {_claims_word(total)}: {', '.join(parts)}." if total else ""
+    # Podsumowanie skilla, a gdy go nie ma (albo zostało odrzucone) - zliczenie werdyktów.
+    view = {"summary": result.get("summary") or tally, "tally": tally, "claims": claims}
     return {"status": "OK", "question": question, "view": view,
             "handoff": (result.get("handoff") or {}).get("status") == "RECOMMENDED"}
