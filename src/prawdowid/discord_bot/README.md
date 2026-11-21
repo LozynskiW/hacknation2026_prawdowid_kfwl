@@ -24,33 +24,15 @@ Odpowiedź: `VerificationReport` (`models/report.py`). Bot czyta ją tolerancyjn
 4. ID serwera testowego (tryb deweloperski w Discordzie → PPM na serwer → Kopiuj ID) do `DISCORD_GUILD_ID` – komendy pojawią się od razu.
 
 ## Uruchomienie lokalne
+Z katalogu głównego repozytorium, `.env` uzupełniony o `DISCORD_TOKEN`, `DISCORD_GUILD_ID`, `BOT_USER_SALT`:
 ```bash
-cp .env.example .env           # uzupełnij DISCORD_TOKEN, DISCORD_GUILD_ID, BOT_USER_SALT
-uv sync
+# terminal 1 - backend
+uvicorn prawdowid.api.app:app --port 8000
 
-# terminal 1 – mock API (dopóki backend nie jest gotowy)
-uv run uvicorn mock_api.app:app --port 8000
-
-# terminal 2 – bot
-uv run python -m discord_bot
+# terminal 2 - bot
+python -m prawdowid.discord_bot
 ```
-Przejście na prawdziwy backend: zmień `PRAWDOWID_API_URL` w `.env`.
-
-## Scenariusze mocka (słowo w treści)
-| Słowo | Wynik |
-|---|---|
-| `skażenie` | ❌ Fałszywe + pomiar PAA + rekomendacja przekazania |
-| `powódź` | ⚠️ Wprowadza w błąd (materiał archiwalny) |
-| `lotnisko` | ✅ Potwierdzone, 2 niezależne źródła |
-| `sprzeczne` | ❔ Brak dowodów + rozbieżność źródeł |
-| `zignoruj` | ❔ Brak dowodów + odnotowana próba injection |
-| `uważam` | 💬 Nie podlega weryfikacji |
-| `awaria` | 🛠️ Błąd techniczny (503) |
-| `wolno` | tryb asynchroniczny 202 + polling |
-| bardzo krótki tekst | ✏️ Prośba o doprecyzowanie |
-| inne | ❔ Brak wystarczających dowodów |
-
-Dane mocka są oznaczone „[DANE TESTOWE]” – nie pokazywać ich jako prawdziwych wyników w demo.
+Adres backendu: `PRAWDOWID_API_URL` w `.env`.
 
 ## Prywatność i bezpieczeństwo
 - Surowe ID Discorda nie opuszcza bota – do API idzie `HMAC-SHA256(id, BOT_USER_SALT)`.
@@ -67,4 +49,4 @@ Dane mocka są oznaczone „[DANE TESTOWE]” – nie pokazywać ich jako prawdz
 | `schemas.py` | tolerancyjny widok `VerificationReport` |
 | `render.py` | raport → embedy (etykiety PL, limity Discorda) |
 | `bot.py` | komendy `/sprawdz`, `/pomoc`, DM i oznaczenia, walidacja wejścia, rate limit |
-| `__main__.py` | `python -m discord_bot` |
+| `__main__.py` | `python -m prawdowid.discord_bot` |

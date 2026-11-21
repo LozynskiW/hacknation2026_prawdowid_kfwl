@@ -1,4 +1,4 @@
-"""Uruchomienie: python -m discord_bot"""
+"""Uruchomienie: python -m prawdowid.discord_bot"""
 
 import logging
 

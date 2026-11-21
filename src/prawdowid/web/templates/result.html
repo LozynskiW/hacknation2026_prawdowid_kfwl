@@ -1,16 +1,15 @@
 {#
-  Fragment odpowiedzi (M7, renderer "web"). Wstawiany przez HTMX do #answer w index.html.
+  Fragment odpowiedzi. Wstawiany przez HTMX do #answer w index.html.
   Jedno pytanie - jedna odpowiedz: fragment zawsze zastepuje poprzednia odpowiedz, bez historii.
 
   Kontekst:
-    check_id  - identyfikator sprawdzenia
-    question  - tekst pytania uzytkownika (juz zamaskowany przez M2)
-    status    - IN_PROGRESS | OK | NEEDS_CLARIFICATION | OUT_OF_SCOPE | TECHNICAL_FAILURE
+    question  - tekst pytania uzytkownika
+    status    - TEXT | OK | NEEDS_CLARIFICATION | OUT_OF_SCOPE | TECHNICAL_FAILURE
     message   - instrukcja dla statusow niewerdyktowych (co zrobic dalej)
-    view      - PresentationModel (base_models/presentation.py), gdy status == OK
+    view      - summary, tally i claims (text, label, short_answer, confidence, explanation, sources, warnings, unknowns), gdy status == OK
     handoff   - True, gdy sprawa powinna trafic do analityka (tylko rekomendacja)
     answer    - zwykly tekst modelu, gdy status == TEXT (odpowiedz poza uzgodnionym formatem)
-  Kontekst buduje app_simple/web_view.py.
+  Kontekst buduje src/prawdowid/api/web_view.py.
 #}
 {%- set labels = {
   "Potwierdzone": ("confirmed", "✓"),
@@ -20,12 +19,7 @@
   "Nie podlega weryfikacji (opinia lub prognoza)": ("not-checkable", "–"),
 } -%}
 
-{% if status == "IN_PROGRESS" %}
-{#- W trakcie nie ma jeszcze pola odpowiedzi - tylko lekki komunikat; karta pojawia sie z odpowiedzia. -#}
-<p class="answer__busy" role="status"
-   hx-get="/wynik/{{ check_id }}" hx-trigger="every 2s" hx-target="this" hx-swap="outerHTML">Sprawdzam w wiarygodnych źródłach…</p>
-
-{% elif status == "TEXT" %}
+{% if status == "TEXT" %}
 {#- Model nie oddal odpowiedzi w uzgodnionym formacie - pokazujemy jego tekst bez kart. -#}
 <article class="result">
   <p class="result__question"><span>Twoje pytanie</span>{{ question }}</p>

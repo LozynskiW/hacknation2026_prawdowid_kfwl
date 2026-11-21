@@ -55,7 +55,7 @@ def _verdict(claim: dict) -> str:
 
 
 def to_template_context(result: dict, question: str) -> dict:
-    """Zamienia raport (format z app_simple.main.to_report), {"answer": ...} lub awarię na kontekst szablonu."""
+    """Zamienia raport (format z prawdowid.api.report.to_report), {"answer": ...} lub awarię na kontekst szablonu."""
     if "answer" in result:
         # Model nie oddał JSON-a w uzgodnionym formacie - pokazujemy jego tekst.
         return {"status": "TEXT", "question": question, "answer": result["answer"]}
