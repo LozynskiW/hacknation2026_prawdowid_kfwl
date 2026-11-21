@@ -8,3 +8,6 @@ discord.py>=2.4
 jinja2>=3.1
 python-multipart>=0.0.9
 pyyaml>=6.0
+
+# Pakiet z src/ (prawdowid) - dzięki temu działa "uvicorn prawdowid.api.app:app" i "python -m prawdowid.discord_bot"
+-e .

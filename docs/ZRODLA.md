@@ -1,6 +1,6 @@
 # Źródła PRAWDOWID
 
-Lista źródeł, z których może korzystać skill weryfikacji, razem z licencjami i zasadami ich kwalifikacji. Pełny katalog do audytu: [`config/sources.yaml`](../config/sources.yaml). Hosty dopuszczone jako dowód (filtr w `app_simple`): [`config/whitelist.txt`](../config/whitelist.txt).
+Lista źródeł, z których może korzystać skill weryfikacji, razem z licencjami i zasadami ich kwalifikacji. Pełny katalog do audytu: [`config/sources.yaml`](../config/sources.yaml). Hosty dopuszczone jako dowód (filtr w `src/prawdowid/api/report.py`): [`config/whitelist.txt`](../config/whitelist.txt).
 
 ## Wymagania zadania i stan
 
@@ -94,7 +94,7 @@ Status źródła ani domena nie przesądzają o prawdziwości konkretnego twierd
 
 - **Krótkie wpisy:** źródła bez jawnej licencji (CERT Polska, WHO, Policja, Pravda, FakeNews.pl, CEDMO) mają w korpusie tylko tytuł, lead i link. Dowód z nich wymaga otwarcia linku.
 - **Kanały blokowane:** dwie największe polskie organizacje fact-checkingowe blokują automaty (Demagog, AFP Sprawdzam), a Konkret24 wymaga licencji. Ich wyniki mogą trafiać do systemu przez Google Fact Check Tools API (wymaga klucza), które zbiera oznaczenia ClaimReview.
-- **Domena a host:** filtr w `app_simple` porównuje dokładny host. Cytat z innej subdomeny tego samego wydawcy (np. `ecdc.europa.eu` zamiast `www.ecdc.europa.eu`) zostanie odrzucony.
+- **Domena a host:** filtr w `src/prawdowid/api/report.py` porównuje dokładny host. Cytat z innej subdomeny tego samego wydawcy (np. `ecdc.europa.eu` zamiast `www.ecdc.europa.eu`) zostanie odrzucony.
 
 ## Serwisy gov.pl (lista dla skilla)
 

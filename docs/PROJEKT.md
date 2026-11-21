@@ -58,8 +58,8 @@ Ten sam input przez dowolny kanał daje ten sam wynik merytoryczny.
 | End-to-end bez interwencji / spójność kanałów | 100% |
 
 ## Stos technologiczny
-Python 3.12 + **FastAPI** (modularny monolit, granice modułów pilnowane przez **import-linter**), kontrakty w **Pydantic v2**, PostgreSQL + pgvector (SQLAlchemy 2 + Alembic), Docker Compose. Modele językowe za wymiennym portem `LlmProvider` (preferencja dostawców z EOG lub self-host).
+Python 3.12 + **FastAPI**, strona WWW w szablonach Jinja2 z HTMX, bot w discord.py. Weryfikację wykonuje agent opisany w `agent/` (procedura i skille), uruchamiany przez dostawcę modelu językowego wskazanego w `.env`. Układ katalogów: [README](../README.md).
 
 ## Dokumenty
-- `docs/ARCHITEKTURA.md` – architektura, przepływ, kontrakty.
-- `docs/MODULY.md` – opis modułów i zadań dla zespołu i agentów AI.
+- `docs/WYMAGANIA.md` - wymagania.
+- `docs/ZRODLA.md` - źródła, licencje i zasady ich kwalifikacji.

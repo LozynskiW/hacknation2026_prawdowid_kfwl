@@ -1,0 +1,127 @@
+"""JSON od agenta -> raport, z którego korzystają strona WWW i bot Discorda.
+
+Tu działa filtr listy dozwolonych źródeł: źródło spoza listy nie jest pokazywane jako dowód,
+a werdykt bez żadnego dozwolonego źródła zamieniamy na brak wystarczających dowodów.
+"""
+
+import json
+import re
+import unicodedata
+import uuid
+from urllib.parse import urlsplit
+
+from prawdowid.api.settings import WHITELIST_FILE
+
+
+def whitelist_hosts() -> set[str]:
+    if not WHITELIST_FILE.exists():
+        return set()
+    return {urlsplit(line.strip()).hostname or "" for line in WHITELIST_FILE.read_text().splitlines() if line.strip()}
+
+
+# Werdykty skilla (po polsku) -> kody raportu, z którego korzystają strona i bot.
+SKILL_VERDICTS = {
+    "POTWIERDZONE": "CONFIRMED",
+    "FALSZYWE": "FALSE",
+    "WPROWADZAJACE_W_BLAD": "MISLEADING",
+    "BRAK_WYSTARCZAJACYCH_DOWODOW": "INSUFFICIENT_EVIDENCE",
+    "NIE_PODLEGA_WERYFIKACJI": "NOT_CHECKABLE",
+}
+NO_SOURCE_TEXT = ("Nie znaleźliśmy potwierdzenia w źródłach z listy dozwolonych, "
+                  "dlatego nie oceniamy tego twierdzenia.")
+
+
+def _verdict_code(value) -> str:
+    """"Fałszywe", "FAŁSZYWE", "falszywe" -> "FALSE". Nieznana wartość = brak wystarczających dowodów."""
+    key = unicodedata.normalize("NFKD", str(value or "")).replace("ł", "l").replace("Ł", "L")
+    key = "".join(ch for ch in key if not unicodedata.combining(ch))
+    key = re.sub(r"[^A-Z]+", "_", key.upper()).strip("_")
+    return SKILL_VERDICTS.get(key) or (key if key in SKILL_VERDICTS.values() else "INSUFFICIENT_EVIDENCE")
+
+
+def _strength(confidence) -> str:
+    try:
+        c = float(confidence)
+    except (TypeError, ValueError):
+        return "LOW"
+    return "HIGH" if c >= 0.8 else "MEDIUM" if c >= 0.5 else "LOW"
+
+
+def _error_message(error) -> str:
+    if isinstance(error, dict):
+        return str(error.get("message") or error.get("reason") or error.get("code") or "Błąd skilla.")
+    return str(error)
+
+
+def to_report(answer: str) -> dict | None:
+    """JSON ze skilla -> raport dla strony i bota. None = to nie był poprawny JSON.
+
+    Format skilla: original_message, overall_verdict, confidence_score, executive_summary,
+    claims[claim_id, evaluated_claim, verdict, confidence_score, summary_response_pl,
+    detailed_justification_pl, refusal_to_judge, sources_used[...]], error.
+    """
+    match = re.search(r"\{.*\}", answer, re.DOTALL)
+    try:
+        data = json.loads(match.group(0)) if match else None
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(data, dict) or not ("claims" in data or "error" in data):
+        return None
+
+    check_id = f"chk_{uuid.uuid4().hex[:12]}"
+    if data.get("error"):
+        return {"checkId": check_id, "status": "TECHNICAL_FAILURE", "statusMessage": _error_message(data["error"])}
+
+    claims_in = [c for c in data.get("claims") or [] if isinstance(c, dict)][:5]
+    if not claims_in:
+        # Skill nie wyodrębnił żadnego twierdzenia - prosimy o doprecyzowanie.
+        return {"checkId": check_id, "status": "NEEDS_CLARIFICATION",
+                "statusMessage": data.get("executive_summary") or None}
+
+    report = {"checkId": check_id, "status": "COMPLETED", "statusMessage": None,
+              "summary": data.get("executive_summary") or "", "claims": [], "evidence": [],
+              "handoff": {"status": "NONE"}}
+    allowed = whitelist_hosts()
+    downgraded = False
+    for i, c in enumerate(claims_in, start=1):
+        verdict = _verdict_code(c.get("verdict"))
+        refusal = c.get("refusal_to_judge") or {}
+        ids, warnings = [], []
+        if refusal.get("is_refused") and refusal.get("reason"):
+            warnings.append({"code": "REFUSED", "message": f"Nie oceniamy: {refusal['reason']}"})
+        for s in c.get("sources_used") or []:
+            if not isinstance(s, dict):
+                continue
+            host = urlsplit(str(s.get("url", ""))).hostname or ""
+            if allowed and host not in allowed:  # źródło spoza whitelisty - nie pokazujemy go jako dowodu
+                warnings.append({"code": "SOURCE_REMOVED", "message": f"Pominięto źródło spoza listy dozwolonych ({host})."})
+                continue
+            eid = f"e{len(report['evidence']) + 1}"
+            ids.append(eid)
+            report["evidence"].append({
+                "evidenceId": eid, "type": "QUOTE", "quote": s.get("exact_quote"),
+                "source": {"title": s.get("title") or host, "publisher": s.get("publisher") or host,
+                           "url": s.get("url"), "publishedAt": s.get("publication_date") or None},
+            })
+
+        explanation = c.get("detailed_justification_pl") or ""
+        short_answer = c.get("summary_response_pl") or ""
+        confidence = c.get("confidence_score")
+        if verdict in ("CONFIRMED", "FALSE", "MISLEADING") and not ids:
+            # Werdykt bez źródła = wstrzymanie się. Tekstu modelu nie pokazujemy jako faktu.
+            verdict, explanation, short_answer, confidence, downgraded = (
+                "INSUFFICIENT_EVIDENCE", NO_SOURCE_TEXT, "", None, True)
+            warnings.append({"code": "NO_SOURCE", "message": "Brak źródła z listy dozwolonych - wstrzymujemy się od oceny."})
+        unknowns = ["Nie znaleziono źródła rozstrzygającego."] if verdict == "INSUFFICIENT_EVIDENCE" and not ids else []
+        report["claims"].append({
+            "claimId": c.get("claim_id") or f"c{i}", "text": c.get("evaluated_claim", ""),
+            "outcome": {"kind": "NOT_CHECKABLE"} if verdict == "NOT_CHECKABLE" else {"kind": "VERDICT", "verdict": verdict},
+            "shortAnswer": short_answer, "explanation": explanation, "confidence": confidence,
+            "evidenceIds": ids, "warnings": warnings, "unknowns": unknowns,
+            "strength": {"level": _strength(confidence),
+                         "factors": {"independentSources": len({report["evidence"][int(e[1:]) - 1]["source"]["publisher"] for e in ids})}}
+            if verdict in ("CONFIRMED", "FALSE", "MISLEADING") else None,
+        })
+    if downgraded:
+        report["summary"] = ""  # podsumowanie skilla opisuje werdykty, których nie potwierdziliśmy
+    return report
