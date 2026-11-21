@@ -1,0 +1,146 @@
+/* Prawdowid - styl strony glownej z obserwujacym okiem (inspiracja: okladka "1984"). */
+
+:root {
+  --bg: #121110;
+  --ink: #efe6d2;
+  --muted: #a89f8c;
+  --cream: #f3ecdc;
+  --cream-shade: #c9bea4;
+  --red: #c8102e;
+  --red-dark: #7a0a1c;
+  --iris-dark: #1b1a18;
+
+  /* Jeden cykl animacji: na wprost - lewo - prawo - na wprost - mrugniecie. */
+  --cycle: 9s;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 50% 35%, #2a2623 0%, var(--bg) 65%);
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+}
+
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 16px;
+  gap: 12px;
+}
+
+/* ---------- Oko ---------- */
+
+.eye {
+  margin: 0 0 24px;
+  width: min(560px, 100%);
+}
+
+.eye__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.eye__rays path {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 6;
+  stroke-linecap: square;
+}
+
+.eye__outline {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 8;
+  stroke-linejoin: round;
+}
+
+.eye__iris-base { fill: var(--red); }
+
+/* Promieniste wlokna teczowki: gesto przerywany, gruby okrag. */
+.eye__iris-fibres {
+  fill: none;
+  stroke: var(--red-dark);
+  stroke-width: 34;
+  stroke-dasharray: 2 4;
+}
+
+.eye__iris-ring {
+  fill: none;
+  stroke: var(--iris-dark);
+  stroke-width: 6;
+}
+
+.eye__pupil { fill: var(--iris-dark); }
+.eye__glint { fill: var(--cream); opacity: .9; }
+
+/* Ruch teczowki: na wprost -> lewo -> prawo -> na wprost. */
+.eye__iris {
+  animation: eye-look var(--cycle) ease-in-out infinite;
+}
+
+/* Mrugniecie: cale oko splaszcza sie do linii i otwiera z powrotem. */
+.eye__lid {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: eye-blink var(--cycle) ease-in-out infinite;
+}
+
+@keyframes eye-look {
+  0%, 14%   { transform: translateX(0); }
+  20%, 34%  { transform: translateX(-92px); }
+  42%, 56%  { transform: translateX(92px); }
+  63%, 100% { transform: translateX(0); }
+}
+
+@keyframes eye-blink {
+  0%, 72%   { transform: scaleY(1); }
+  75%       { transform: scaleY(.04); }
+  79%, 100% { transform: scaleY(1); }
+}
+
+/* Uzytkownicy, ktorzy wylaczyli animacje, widza oko patrzace na wprost. */
+@media (prefers-reduced-motion: reduce) {
+  .eye__iris, .eye__lid { animation: none; }
+}
+
+/* ---------- Tekst ---------- */
+
+.hero__title {
+  margin: 0;
+  font-size: clamp(2.6rem, 9vw, 5.5rem);
+  font-weight: 900;
+  letter-spacing: .18em;
+  line-height: 1;
+  color: var(--ink);
+  /* Litery przesuniete o odstep w prawo; wyrownanie wizualne do srodka. */
+  padding-left: .18em;
+}
+
+.hero__tagline {
+  margin: 0;
+  font-size: clamp(1rem, 2.6vw, 1.35rem);
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.hero__lead {
+  margin: 8px 0 0;
+  max-width: 34rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--muted);
+}

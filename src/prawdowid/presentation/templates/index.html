@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prawdowid</title>
+  <meta name="description" content="Prawdowid - sprawdzanie, czy informacja jest prawdziwa.">
+  <link rel="stylesheet" href="/static/css/prawdowid.css">
+</head>
+<body>
+  <main class="hero">
+    <!-- Oko, ktore obserwuje wszystko: patrzy na wprost, rozglada sie w lewo i w prawo, mruga i zaczyna od nowa. -->
+    <figure class="eye" aria-hidden="true">
+      <svg class="eye__svg" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="eye-shape">
+            <path d="M20 110 Q200 -30 380 110 Q200 250 20 110 Z"/>
+          </clipPath>
+          <radialGradient id="sclera" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" style="stop-color: var(--cream)"/>
+            <stop offset="80%" style="stop-color: var(--cream)"/>
+            <stop offset="100%" style="stop-color: var(--cream-shade)"/>
+          </radialGradient>
+        </defs>
+
+        <!-- Promienie wokol oka -->
+        <g class="eye__rays">
+          <path d="M200 6 V-40 M120 22 L100 -18 M280 22 L300 -18 M50 52 L20 22 M350 52 L380 22"/>
+          <path d="M200 214 V260 M120 198 L100 238 M280 198 L300 238 M50 168 L20 198 M350 168 L380 198"/>
+        </g>
+
+        <!-- Oko, ktore zamyka sie przy mrugnieciu -->
+        <g class="eye__lid">
+          <g clip-path="url(#eye-shape)">
+            <rect x="0" y="0" width="400" height="220" fill="url(#sclera)"/>
+            <g class="eye__iris">
+              <circle cx="200" cy="110" r="62" class="eye__iris-base"/>
+              <circle cx="200" cy="110" r="42" class="eye__iris-fibres"/>
+              <circle cx="200" cy="110" r="62" class="eye__iris-ring"/>
+              <circle cx="200" cy="110" r="26" class="eye__pupil"/>
+              <circle cx="186" cy="96" r="8" class="eye__glint"/>
+            </g>
+          </g>
+          <path class="eye__outline" d="M20 110 Q200 -30 380 110 Q200 250 20 110 Z"/>
+        </g>
+      </svg>
+    </figure>
+
+    <h1 class="hero__title">PRAWDOWID</h1>
+    <p class="hero__tagline">Widzi wszystko. Sprawdza każde słowo.</p>
+    <p class="hero__lead">Wklej informację, a Prawdowid sprawdzi ją w wiarygodnych źródłach i powie, czy to prawda, czy fałsz.</p>
+  </main>
+</body>
+</html>
