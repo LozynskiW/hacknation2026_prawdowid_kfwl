@@ -58,7 +58,7 @@ Ten sam input przez dowolny kanał daje ten sam wynik merytoryczny.
 | End-to-end bez interwencji / spójność kanałów | 100% |
 
 ## Stos technologiczny
-Java + Spring Boot, **Spring Modulith** (modularny monolit), PostgreSQL + pgvector, Docker Compose. Modele językowe za wymiennym portem `LlmProvider` (preferencja dostawców z EOG lub self-host).
+Python 3.12 + **FastAPI** (modularny monolit, granice modułów pilnowane przez **import-linter**), kontrakty w **Pydantic v2**, PostgreSQL + pgvector (SQLAlchemy 2 + Alembic), Docker Compose. Modele językowe za wymiennym portem `LlmProvider` (preferencja dostawców z EOG lub self-host).
 
 ## Dokumenty
 - `docs/ARCHITEKTURA.md` – architektura, przepływ, kontrakty.

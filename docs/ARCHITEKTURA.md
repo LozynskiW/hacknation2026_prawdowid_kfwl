@@ -2,80 +2,91 @@
 
 ## 1. Styl
 **Modularny monolit**: jeden artefakt, jedna baza, twarde granice modułów.
-- Spring Boot + **Spring Modulith**: pakiet najwyższego poziomu = moduł; test `ApplicationModules.of(PrawdowidApplication.class).verify()` w CI blokuje niedozwolone zależności.
-- Ścieżka krytyczna (od zapytania do raportu) jest **synchroniczna** przez publiczne API modułów, sterowana przez orkiestrator.
-- Efekty uboczne (audyt, sprawy, powiadomienia) idą przez **zdarzenia** z rejestrem publikacji w bazie.
-- PostgreSQL + pgvector (pełnotekst + wektory w jednej bazie), Docker Compose.
+- Python 3.12 + **FastAPI** (async). Pakiet najwyższego poziomu w `src/prawdowid/` = moduł.
+- Publiczne API modułu = jego `__init__.py` (eksport serwisu i typów). Implementacja w `<moduł>/_internal/`.
+- **import-linter** w CI blokuje niedozwolone zależności (zakaz importu `_internal` innych modułów, niezależność M2–M6, `shared` bez zależności).
+- Kontrakty między modułami: modele **Pydantic v2**; JSON Schema generowana z modeli (`model_json_schema()`) do `contracts/`.
+- Ścieżka krytyczna (od zapytania do raportu) wywoływana przez orkiestrator: `await` na publicznych serwisach modułów; równoległość per twierdzenie przez `asyncio.gather` z semaforem.
+- Efekty uboczne (audyt, sprawy, powiadomienia) przez **wewnętrzną szynę zdarzeń** (`shared.events`, publish/subscribe w procesie) + tabela `outbox` w bazie, żeby zdarzenie nie zginęło przy błędzie.
+- PostgreSQL + pgvector (pełnotekst + wektory w jednej bazie), SQLAlchemy 2 (async) + Alembic, Docker Compose.
+- Bot Discord działa jako **osobny proces** (`python -m prawdowid.access.channels.discord`) i woła to samo REST API co WWW – gwarancja tej samej logiki.
 
-## 2. Widok ogólny
+## 2. Łańcuch modułów
 
-```
-                    ┌──────────────── Kanały ────────────────┐
-                    │   WWW (SPA)     Discord bot   WhatsApp* │   * adapter demo
-                    └──────┬──────────────┬────────────┬─────┘
-                           │              │            │
-┌──────────────────────────▼──────────────▼────────────▼──────────────────────────┐
-│ M1 access   REST API · adaptery kanałów · rate limit · sesje rozmów · dostarczenie│
-└──────────────────────────┬─────────────────────────────────────▲────────────────┘
-                           │ submit(InboundMessage) → checkId     │ PresentationModel
-┌──────────────────────────▼─────────────────────────────────────┴────────────────┐
-│ verification  (orkiestrator, VerificationContext, pętla, budżet czasu)           │
-│                                                                                  │
-│   M2 intake ──► M3 preselection ──► M4 retrieval ──► M5 reporting ──► M6 review  │
-│                       ▲                                                   │      │
-│                       └──────────── RETRY + remarks ──────────────────────┘      │
-│                                                                   ACCEPT/ABSTAIN │
-│                                                                         ▼        │
-│                                                                 M7 presentation  │
-└────────┬──────────────────┬────────────────────┬─────────────────────┬──────────┘
-         │ read API         │ zdarzenia          │ zdarzenia           │ porty
-┌────────▼───────┐  ┌───────▼───────┐  ┌─────────▼────────┐  ┌─────────▼──────────────┐
-│ catalog        │  │ audit         │  │ cases            │  │ shared                 │
-│ whitelista,    │  │ log przebiegu,│  │ sprawy, klastry, │  │ kontrakty, LlmProvider,│
-│ sources.yaml,  │  │ metryki, koszt│  │ powiadomienia,   │  │ Fetcher, FactCheck-    │
-│ ingest, korpus │  │ zdarzenia bezp│  │ handoff          │  │ Client, Guard (PII,    │
-└────────┬───────┘  └───────────────┘  └──────────────────┘  │ injection, walidacja)  │
-         │                                                   └────────────────────────┘
-┌────────▼────────────────────────────────────────────────────────────────────────┐
-│ PostgreSQL + pgvector: sources · documents · chunks · data_points · checks ·     │
-│ claims · evidence · reports · cases · events · conversations                     │
-└─────────────────────────────────────────────────────────────────────────────────┘
-         ▲
-┌────────┴──────────────────────┐      ┌─────────────────────────────────┐
-│ Ingest (harmonogram w catalog)│      │ Zewnętrzne: LLM (port),          │
-│ whitelista → crawler/API →    │      │ Google Fact Check Tools API,     │
-│ snapshot + daty + hash        │      │ Discord API                      │
-└───────────────────────────────┘      └─────────────────────────────────┘
-```
-
-## 3. Przepływ jednego sprawdzenia
+Każdy moduł to osobny blok. Dane płyną w dół, jeden kontrakt JSON między blokami.
 
 ```
-M1 access ─► verification.submit() ─► 202 + checkId   (kanał: "Sprawdzam…")
-                 │
-                 ▼
-          M2 intake ─► CheckRequest
-                 │      status ≠ OK ─► NEEDS_CLARIFICATION / OUT_OF_SCOPE /
-                 │                     TECHNICAL_FAILURE ─► M7 (bez werdyktu)
-    ┌──────────► M3 preselection ─► SearchPlan          (tylko twierdzenia do sprawdzenia)
-    │            │
-    │            ▼
-    │     M4 retrieval ─► EvidenceSet                   (korpus + Fact Check API + dane)
-    │            │
-    │            ▼
-    │     M5 reporting ─► VerificationReport (draft)    (werdykt z reguł R0–R6)
-    │            │
-    │            ▼
-    │     M6 review ─┬─ ACCEPT ─────────────────────► M7 presentation ─► M1 (push / poll)
-    │                │
-    └── RETRY ◄──────┤  remarks[tura][uwagi], tylko odrzucone twierdzenia
-                     │
-                     └─ ABSTAIN (maxRounds / budżet czasu)
-                          ─► "brak wystarczających dowodów" + remarks
-                          ─► zdarzenie → cases (rekomendacja / sprawa)
+┌──────────────────────────────────────┐
+│ M1  ACCESS                           │
+│ WWW / Discord / WhatsApp (demo)      │
+└──────────────────┬───────────────────┘
+                   │ InboundMessage
+                   ▼
+┌──────────────────────────────────────┐
+│ M2  INTAKE                           │
+│ standaryzacja, PII, twierdzenia      │
+└──────────────────┬───────────────────┘
+                   │ CheckRequest
+                   ▼
+┌──────────────────────────────────────┐
+│ M3  PRESELECTION                     │◄─────────┐
+│ whitelista, zakres dat, zapytania    │          │
+└──────────────────┬───────────────────┘          │
+                   │ SearchPlan                   │
+                   ▼                              │
+┌──────────────────────────────────────┐          │
+│ M4  RETRIEVAL                        │          │
+│ korpus, Fact Check API, cytaty       │          │
+└──────────────────┬───────────────────┘          │
+                   │ EvidenceSet                  │ RETRY
+                   ▼                              │ + remarks
+┌──────────────────────────────────────┐          │ (maks. 2 tury)
+│ M5  REPORTING                        │          │
+│ werdykt z reguł, wstępny raport      │          │
+└──────────────────┬───────────────────┘          │
+                   │ VerificationReport           │
+                   ▼                              │
+┌──────────────────────────────────────┐          │
+│ M6  REVIEW                           │──────────┘
+│ kontrola cytatów i ugruntowania      │
+└──────────────────┬───────────────────┘
+                   │ ACCEPT / ABSTAIN
+                   ▼
+┌──────────────────────────────────────┐
+│ M7  PRESENTATION                     │
+│ raport czytelny dla obywatela        │
+└──────────────────┬───────────────────┘
+                   │ PresentationModel
+                   ▼
+              M1 → użytkownik
 ```
 
-Kanały są asynchroniczne: Discord wymaga potwierdzenia interakcji w ≤3 s (odpowiedź odroczona), wynik dosyłany po zakończeniu. WWW: polling `GET /api/v1/checks/{id}` lub SSE.
+## 3. Moduły wspierające
+
+Nie są ogniwami łańcucha. Łańcuch z nich korzysta.
+
+```
+┌────────────────────┐  ┌────────────────────┐  ┌────────────────────┐
+│ VERIFICATION       │  │ CATALOG            │  │ SHARED             │
+│ uruchamia łańcuch, │  │ whitelista,        │  │ kontrakty, LLM,    │
+│ pętla, limit czasu │  │ korpus, ingest     │  │ Fetcher, Guard     │
+└────────────────────┘  └────────────────────┘  └────────────────────┘
+┌────────────────────┐  ┌────────────────────┐  ┌────────────────────┐
+│ AUDIT              │  │ CASES              │  │ POSTGRESQL         │
+│ log, metryki,      │  │ sprawy moderatora, │  │ + pgvector         │
+│ koszt              │  │ powiadomienia      │  │                    │
+└────────────────────┘  └────────────────────┘  └────────────────────┘
+```
+
+| Kto | Z czego korzysta |
+|---|---|
+| M3, M4 | CATALOG |
+| M2, M4, M5, M6 | SHARED (LLM, Fetcher, Guard) |
+| wszystkie | AUDIT, CASES (przez zdarzenia) |
+
+Uwagi do przebiegu:
+- M2 może zakończyć łańcuch od razu (doprecyzowanie, poza zakresem, awaria). Wtedy wynik idzie prosto do M7, bez werdyktu.
+- Kanał dostaje natychmiast „Sprawdzam…”, wynik przychodzi po zakończeniu łańcucha.
 
 ## 4. Reguły zależności
 
@@ -92,6 +103,31 @@ wszystkie     ──(zdarzenia)──► audit, cases
 - M2–M6 **nie wołają się nawzajem**. Wyjątek: `review` używa publicznego `VerdictRules` z `reporting` do przeliczenia.
 - `shared` nie zależy od żadnego modułu.
 - Adaptery kanałów nie zawierają logiki merytorycznej.
+
+Konfiguracja import-linter (`.importlinter`, szkic):
+```ini
+[importlinter]
+root_package = prawdowid
+
+[importlinter:contract:no-internal]
+name = Zakaz importu _internal innych modułów
+type = forbidden
+source_modules = prawdowid.intake prawdowid.preselection prawdowid.retrieval prawdowid.reporting prawdowid.review prawdowid.presentation prawdowid.verification prawdowid.access
+forbidden_modules = prawdowid.catalog._internal prawdowid.cases._internal prawdowid.audit._internal
+# (analogicznie dla każdego modułu)
+
+[importlinter:contract:pipeline-independent]
+name = Moduły pipeline niezależne od siebie
+type = independence
+modules = prawdowid.intake prawdowid.preselection prawdowid.retrieval prawdowid.presentation
+# reporting/review: wyjątek review -> reporting (VerdictRules), osobny kontrakt forbidden
+
+[importlinter:contract:shared-leaf]
+name = shared nie zależy od modułów
+type = forbidden
+source_modules = prawdowid.shared
+forbidden_modules = prawdowid.access prawdowid.intake prawdowid.preselection prawdowid.retrieval prawdowid.reporting prawdowid.review prawdowid.presentation prawdowid.verification prawdowid.catalog prawdowid.cases prawdowid.audit
+```
 
 ## 5. Pętla ponownej weryfikacji
 - M6 mierzy **ugruntowanie** raportu (`groundingScore`), nie „prawdę”.
@@ -114,7 +150,7 @@ wszystkie     ──(zdarzenia)──► audit, cases
 Szczegóły reguł werdyktu i progów M6: `docs/MODULY.md` (sekcje M5 i M6).
 
 ## 6. Kontrakty (JSON, `schemaVersion: "1.0"`)
-Rekordy Javy w `shared.contract`, JSON Schema w `contracts/`, walidacja na granicy modułu.
+Modele Pydantic w `prawdowid/shared/contracts/`, JSON Schema generowana do `contracts/` (`make schemas`), walidacja przy każdym przejściu między modułami i przy każdej odpowiedzi LLM.
 
 | Kontrakt | Producent → konsument | Kluczowe pola |
 |---|---|---|
@@ -136,7 +172,7 @@ Słowniki:
 |---|---|
 | `sources` | wpis whitelisty/katalogu: URL, host, typ, tier, rola (`EVIDENCE`/`REFERRAL`), metoda pobrania, częstotliwość, licencja, status, powód wykluczenia |
 | `documents` | snapshot: URL kanoniczny, tytuł, wydawca, `published_at`, `fetched_at`, `valid_from/to`, hash, flaga injection |
-| `chunks` | fragmenty dokumentu: tekst, `tsvector`, embedding |
+| `chunks` | fragmenty dokumentu: tekst, `tsvector`, embedding (`vector(768)` lub zgodnie z modelem) |
 | `data_points` | pomiary: wartość, jednostka, stacja/obszar, `observed_at`, źródło |
 | `checks` | zgłoszenie: kanał, zamaskowany tekst, czasy etapów, tokeny, koszt, wersje, status, `expires_at` |
 | `claims`, `evidence`, `reports` | wynik per sprawdzenie (JSONB + kolumny do raportowania) |
@@ -154,7 +190,7 @@ Słowniki:
 - **Odporność:** timeouty, circuit breaker na LLM i Fact Check API, kolejka z limitem równoległości (backpressure), komunikat „spróbuj za chwilę”.
 
 ## 9. Obserwowalność
-Dla każdego sprawdzenia: czas etapów, wywołania i tokeny modeli, szacunkowy koszt, błędy wyszukiwania, liczba tur, wstrzymania, eskalacje. Endpoint `/actuator/health` z kontrolą zależności (DB, LLM, Fact Check API). Skrypt raportu kosztu 100 testów i 1000 zapytań.
+Dla każdego sprawdzenia: czas etapów, wywołania i tokeny modeli, szacunkowy koszt, błędy wyszukiwania, liczba tur, wstrzymania, eskalacje. Endpoint `GET /health` (żywotność) i `GET /health/ready` (DB, LLM, Fact Check API). Logi strukturalne JSON (`structlog`), opcjonalnie metryki Prometheus. Skrypt raportu kosztu 100 testów i 1000 zapytań.
 
 ## 10. Budżet czasu (cel: mediana ≤ 30 s)
 | Etap | Szacunek |
@@ -168,4 +204,26 @@ Dla każdego sprawdzenia: czas etapów, wywołania i tokeny modeli, szacunkowy k
 | Tura 2 (tylko odrzucone) | +8–12 s |
 
 ## 11. Uruchomienie
-`docker compose up` → aplikacja + PostgreSQL. Seed korpusu: `make seed` (lub zadanie startowe). Testy jury-like: `make eval` → raport mierników. Tryb `frozen-corpus` do odtwarzalnych testów (nagrane odpowiedzi źródeł i Fact Check API).
+`docker compose up` → `api` (FastAPI/uvicorn), `discord-bot`, `db` (PostgreSQL + pgvector), opcjonalnie `worker` (ingest wg harmonogramu).
+- Migracje: `alembic upgrade head` (przy starcie kontenera).
+- Seed korpusu: `make seed` (`python -m prawdowid.catalog.ingest`).
+- Testy: `make test` (pytest + import-linter), `make eval` → raport mierników.
+- Tryb `FROZEN_CORPUS=1` do odtwarzalnych testów (nagrane odpowiedzi źródeł i Fact Check API).
+
+## 12. Wybór bibliotek (do weryfikacji licencji – kod przechodzi na MSZ, unikamy copyleftu)
+| Obszar | Biblioteka |
+|---|---|
+| API | FastAPI, uvicorn, pydantic v2, pydantic-settings |
+| Baza | SQLAlchemy 2 (async), asyncpg, Alembic, pgvector (python) |
+| HTTP / pobieranie | httpx (timeouty, limity), własna ochrona SSRF |
+| Ekstrakcja treści HTML | trafilatura lub readability-lxml (**sprawdzić licencję wybranej wersji**) |
+| Embeddingi | sentence-transformers + model wielojęzyczny (np. rodzina multilingual-e5), lokalnie |
+| PII | reguły regex PL (PESEL, NIP, telefon, e-mail, IBAN) + opcjonalnie Presidio |
+| Rate limit | slowapi |
+| Odporność | tenacity (ponowienia), prosty circuit breaker |
+| Discord | discord.py |
+| WWW | Jinja2 + HTMX (serwowane przez FastAPI) – najmniej kodu, bez osobnego builda |
+| Testy / jakość | pytest, pytest-asyncio, respx (mock HTTP), import-linter, ruff, mypy |
+| Pakiety | uv |
+
+Uwaga: wbudowane konfiguracje wyszukiwania pełnotekstowego PostgreSQL **nie mają języka polskiego**. Opcje: słownik `simple` + `unaccent` (najprościej), albo doinstalowanie słownika polskiego (hunspell/ispell) w obrazie Dockera. Wyszukiwanie wektorowe kompensuje brak stemmingu.
