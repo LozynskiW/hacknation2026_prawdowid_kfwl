@@ -29,6 +29,7 @@ MSG_BAD_RESPONSE = "Usługa zwróciła nieprawidłową odpowiedź. Spróbuj pono
 @dataclass(frozen=True)
 class CheckOutcome:
     report: ReportView | None = None
+    answer: str | None = None  # prosta aplikacja: odpowiedź modelu jako tekst
     failure: str | None = None
     latency_ms: int = 0
 
@@ -62,6 +63,8 @@ class PrawdowidClient:
                 report, failure = await self._check(payload)
         except TimeoutError:
             report, failure = None, MSG_TIMEOUT
+        if isinstance(report, str):
+            return CheckOutcome(answer=report, latency_ms=int((time.monotonic() - started) * 1000))
         latency = int((time.monotonic() - started) * 1000)
         log.info("check done conversation=%s latency_ms=%s ok=%s", conversation_id, latency, failure is None)
         return CheckOutcome(report=report, failure=failure, latency_ms=latency)
@@ -96,13 +99,15 @@ class PrawdowidClient:
                 return report, failure
 
     @staticmethod
-    def _parse(resp: httpx.Response) -> tuple[ReportView | None, str | None]:
+    def _parse(resp: httpx.Response) -> tuple[ReportView | str | None, str | None]:
         if resp.status_code == 429:
             return None, MSG_RATE_LIMITED
         body = _safe_json(resp)
         if resp.status_code >= 400:
             # Backend może zwrócić {"status": "TECHNICAL_FAILURE", "statusMessage": "..."}
             return None, body.get("statusMessage") or MSG_UNAVAILABLE
+        if isinstance(body.get("answer"), str):
+            return (body["answer"], None) if body["answer"].strip() else (None, MSG_BAD_RESPONSE)
         try:
             return ReportView.model_validate(body), None
         except ValidationError as exc:

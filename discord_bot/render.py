@@ -52,6 +52,8 @@ HANDOFF_PL = {
 
 
 def render(outcome: CheckOutcome, full_result_url: str | None = None) -> list[discord.Embed]:
+    if outcome.answer is not None:
+        return answer_embeds(outcome.answer)
     if outcome.failure or outcome.report is None:
         return [failure_embed(outcome.failure or "Nie udało się wykonać sprawdzenia.")]
     report = outcome.report
@@ -62,6 +64,15 @@ def render(outcome: CheckOutcome, full_result_url: str | None = None) -> list[di
     for claim in report.claims[:MAX_CLAIM_EMBEDS]:
         embeds.append(_claim_embed(claim, evidence))
     return _fit_total(embeds)
+
+
+def answer_embeds(text: str) -> list[discord.Embed]:
+    """Odpowiedź modelu jako tekst (Markdown), podzielona na embedy po 4000 znaków."""
+    chunks = [text[i:i + 4000] for i in range(0, min(len(text), MAX_TOTAL_CHARS), 4000)] or [""]
+    embeds = [discord.Embed(title="🔎 Wynik sprawdzenia" if i == 0 else None, description=c, color=GREY)
+              for i, c in enumerate(chunks)]
+    embeds[-1].set_footer(text=FOOTER)
+    return embeds
 
 
 def failure_embed(message: str) -> discord.Embed:
