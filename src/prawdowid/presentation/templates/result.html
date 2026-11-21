@@ -18,11 +18,9 @@
 } -%}
 
 {% if status == "IN_PROGRESS" %}
-<div class="result result--pending"
-     hx-get="/wynik/{{ check_id }}" hx-trigger="every 2s" hx-target="this" hx-swap="outerHTML">
-  <p class="result__question"><span>Twoje pytanie</span>{{ question }}</p>
-  <p class="result__status" role="status">Sprawdzam w wiarygodnych źródłach…</p>
-</div>
+{#- W trakcie nie ma jeszcze pola odpowiedzi - tylko lekki komunikat; karta pojawia sie z odpowiedzia. -#}
+<p class="answer__busy" role="status"
+   hx-get="/wynik/{{ check_id }}" hx-trigger="every 2s" hx-target="this" hx-swap="outerHTML">Sprawdzam w wiarygodnych źródłach…</p>
 
 {% elif status != "OK" %}
 {#- Statusy niewerdyktowe maja inny wyglad niz werdykty i mowia, co zrobic. -#}

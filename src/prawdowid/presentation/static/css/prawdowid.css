@@ -126,78 +126,88 @@ body {
   padding: 16px 16px 40px;
 }
 
-.ask {
-  background: var(--panel);
-  border: 1px solid var(--panel-edge);
-  border-radius: 14px;
-  padding: 20px;
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
-.ask__label {
-  display: block;
-  margin-bottom: 10px;
-  font-weight: 700;
-  font-size: 1.1rem;
+/* Pasek jak w czacie: zaokraglone pole i okragly przycisk wysylania w srodku. */
+.ask__bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 8px 8px 20px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 28px;
+  background: var(--panel);
+  transition: border-color .15s;
 }
+
+.ask__bar:focus-within { border-color: var(--muted); }
 
 .ask__input {
-  display: block;
-  width: 100%;
-  min-height: 120px;
-  resize: vertical;
-  padding: 12px 14px;
-  border: 1px solid var(--panel-edge);
-  border-radius: 10px;
-  background: var(--bg);
+  flex: 1;
+  min-width: 0;
+  /* Jedna linia na start; wysokosc ustawia skrypt w miare pisania. */
+  height: 40px;
+  max-height: 220px;
+  padding: 8px 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
   color: var(--ink);
   font: inherit;
+  line-height: 24px;
 }
 
-.ask__input::placeholder { color: #7f776a; }
+.ask__input::placeholder { color: #8a8274; }
 
-.ask__input:focus-visible,
-.ask__button:focus-visible {
+.ask__send {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  cursor: pointer;
+  transition: background .15s, opacity .15s;
+}
+
+.ask__send svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ask__send:hover { background: #a50d26; }
+.ask__send:disabled { opacity: .35; cursor: default; }
+
+.ask__send:focus-visible {
   outline: 3px solid var(--red-bright);
   outline-offset: 2px;
 }
 
-.ask__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.ask__hint {
-  margin: 0;
-  font-size: .875rem;
-  color: var(--muted);
-}
-
-.ask__button {
-  border: 0;
-  border-radius: 10px;
-  padding: 12px 28px;
-  background: var(--red);
-  color: #fff;
-  font: inherit;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.ask__button:hover { background: #a50d26; }
-.ask__button:disabled { opacity: .6; cursor: progress; }
-
 /* Komunikat "Sprawdzam..." widoczny tylko w trakcie zapytania HTMX. */
-.ask__busy {
-  display: none;
-  margin: 12px 0 0;
+.ask__busy,
+.answer__busy {
+  margin: 14px 0 0;
+  text-align: center;
   color: var(--muted);
+  font-size: .95rem;
 }
+.ask__busy { display: none; }
 .ask__busy.htmx-request { display: block; }
 
 /* ---------- Odpowiedz (templates/result.html) ---------- */
@@ -210,6 +220,17 @@ body {
   border: 1px solid var(--panel-edge);
   border-radius: 14px;
   padding: 20px;
+  animation: answer-in .35s ease-out;
+}
+
+/* Karta odpowiedzi wysuwa sie lagodnie, gdy przychodzi odpowiedz. */
+@keyframes answer-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result { animation: none; }
 }
 
 .result__question {
