@@ -1,0 +1,451 @@
+# Katalog źródeł PRAWDOWID - lista do audytu.
+#
+# Zasady kwalifikacji, aktualizacji i wykluczania: docs/ZRODLA.md.
+# Korpus z tych źródeł buduje: python scripts/build_corpus.py  (wynik: data/corpus/).
+#
+# Pola:
+#   id          - stały identyfikator źródła
+#   publisher   - wydawca
+#   url         - adres, z którego pobieramy (lista, RSS albo API)
+#   type        - OFFICIAL (urzędowe), MEASUREMENT (pomiary), LEGAL (akty prawne), FACT_CHECK (weryfikacja faktów)
+#   tier        - 1 = źródło pierwotne / urzędowe, 2 = wiarygodne źródło wtórne
+#   role        - EVIDENCE (może być dowodem), REFERRAL (tylko "sprawdź sam", nigdy dowód)
+#   topics      - tematy (taksonomia z docs/MODULY.md)
+#   method      - sposób pobrania: GOVPL_LIST, RSS, SEJM_ELI, IMGW_SYNOP, GIOS_AQ, POLICJA_LIST, NONE
+#   pages       - ile stron listy pobrać (GOVPL_LIST)
+#   refresh     - jak często odświeżać
+#   storage     - co przechowujemy: FULL_TEXT, SUMMARY (tytuł + lead + link), DATA (rekord pomiaru), METADATA
+#   language    - język treści
+#   license     - podstawa ponownego wykorzystania (z linkiem do warunków)
+#   status      - ACTIVE albo EXCLUDED (z powodem w exclusion_reason)
+
+sources:
+
+  # ---------------------------------------------------------------- urzędowe: gov.pl
+  # Treści tekstowe gov.pl: CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin).
+
+  - id: govpl-rcb
+    publisher: Rządowe Centrum Bezpieczeństwa
+    url: https://www.gov.pl/web/rcb/komunikaty
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [bezpieczeństwo publiczne, ostrzeżenia, dezinformacja]
+    method: GOVPL_LIST
+    pages: 2
+    refresh: 1h
+    storage: FULL_TEXT
+    language: pl
+    license: CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin)
+    status: ACTIVE
+
+  - id: govpl-msz
+    publisher: Ministerstwo Spraw Zagranicznych
+    url: https://www.gov.pl/web/dyplomacja/aktualnosci
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [podróże, sytuacja międzynarodowa, komunikaty rządu]
+    method: GOVPL_LIST
+    pages: 2
+    refresh: 6h
+    storage: FULL_TEXT
+    language: pl
+    license: CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin)
+    status: ACTIVE
+
+  - id: govpl-paa
+    publisher: Państwowa Agencja Atomistyki
+    url: https://www.gov.pl/web/paa/aktualnosci2
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [promieniowanie]
+    method: GOVPL_LIST
+    pages: 2
+    refresh: 6h
+    storage: FULL_TEXT
+    language: pl
+    license: CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin)
+    status: ACTIVE
+
+  - id: govpl-mswia
+    publisher: Ministerstwo Spraw Wewnętrznych i Administracji
+    url: https://www.gov.pl/web/mswia/aktualnosci
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [bezpieczeństwo publiczne, komunikaty rządu]
+    method: GOVPL_LIST
+    pages: 2
+    refresh: 6h
+    storage: FULL_TEXT
+    language: pl
+    license: CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin)
+    status: ACTIVE
+
+  - id: govpl-mon
+    publisher: Ministerstwo Obrony Narodowej
+    url: https://www.gov.pl/web/obrona-narodowa/aktualnosci5
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [obronność]
+    method: GOVPL_LIST
+    pages: 2
+    refresh: 6h
+    storage: FULL_TEXT
+    language: pl
+    license: CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin)
+    status: ACTIVE
+
+  - id: govpl-sluzby-specjalne
+    publisher: Ministerstwo Koordynator Służb Specjalnych
+    url: https://www.gov.pl/web/sluzby-specjalne/aktualnosci
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [bezpieczeństwo publiczne, dezinformacja]
+    method: GOVPL_LIST
+    pages: 2
+    refresh: 6h
+    storage: FULL_TEXT
+    language: pl
+    license: CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin)
+    status: ACTIVE
+
+  - id: govpl-psp
+    publisher: Komenda Główna Państwowej Straży Pożarnej
+    url: https://www.gov.pl/web/kgpsp/aktualnosci
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [bezpieczeństwo publiczne, powódź]
+    method: GOVPL_LIST
+    pages: 1
+    refresh: 1h
+    storage: FULL_TEXT
+    language: pl
+    license: CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin)
+    status: ACTIVE
+
+  - id: govpl-infrastruktura
+    publisher: Ministerstwo Infrastruktury
+    url: https://www.gov.pl/web/infrastruktura/aktualnosci
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [drogi, kolej, lotnictwo, morze]
+    method: GOVPL_LIST
+    pages: 2
+    refresh: 6h
+    storage: FULL_TEXT
+    language: pl
+    license: CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin)
+    status: ACTIVE
+
+  - id: govpl-gis
+    publisher: Główny Inspektorat Sanitarny
+    url: https://www.gov.pl/web/gis/wiadomosci
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [zdrowie, ostrzeżenia]
+    method: GOVPL_LIST
+    pages: 2
+    refresh: 6h
+    storage: FULL_TEXT
+    language: pl
+    license: CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin)
+    status: ACTIVE
+
+  - id: govpl-zdrowie
+    publisher: Ministerstwo Zdrowia
+    url: https://www.gov.pl/web/zdrowie/wiadomosci
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [zdrowie]
+    method: GOVPL_LIST
+    pages: 2
+    refresh: 6h
+    storage: FULL_TEXT
+    language: pl
+    license: CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin)
+    status: ACTIVE
+
+  - id: govpl-cyfryzacja
+    publisher: Ministerstwo Cyfryzacji
+    url: https://www.gov.pl/web/cyfryzacja/wiadomosci
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [cyber, dezinformacja]
+    method: GOVPL_LIST
+    pages: 2
+    refresh: 6h
+    storage: FULL_TEXT
+    language: pl
+    license: CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin)
+    status: ACTIVE
+
+  - id: govpl-klimat
+    publisher: Ministerstwo Klimatu i Środowiska
+    url: https://www.gov.pl/web/klimat/wiadomosci
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [powietrze, środowisko]
+    method: GOVPL_LIST
+    pages: 1
+    refresh: 1d
+    storage: FULL_TEXT
+    language: pl
+    license: CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin)
+    status: ACTIVE
+
+  # ---------------------------------------------------------------- urzędowe: inne
+  - id: policja
+    publisher: Komenda Główna Policji
+    url: https://policja.pl/pol/aktualnosci
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [bezpieczeństwo publiczne]
+    method: POLICJA_LIST
+    refresh: 6h
+    storage: SUMMARY
+    language: pl
+    license: informacja publiczna; brak jawnej licencji na treść - przechowujemy tylko tytuł, datę i link
+    status: ACTIVE
+
+  - id: cert-polska
+    publisher: CERT Polska (NASK)
+    url: https://cert.pl/rss.xml
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [cyber]
+    method: RSS
+    refresh: 6h
+    storage: SUMMARY
+    language: pl
+    license: brak jawnej licencji na treść - przechowujemy tytuł, lead z RSS i link
+    status: ACTIVE
+
+  - id: ec-presscorner
+    publisher: Komisja Europejska
+    url: https://ec.europa.eu/commission/presscorner/api/rss?language=pl
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [sytuacja międzynarodowa, komunikaty UE]
+    method: RSS
+    refresh: 6h
+    storage: SUMMARY
+    language: pl
+    license: CC BY 4.0 - decyzja Komisji 2011/833/UE (https://commission.europa.eu/legal-notice_pl)
+    status: ACTIVE
+
+  - id: consilium
+    publisher: Rada Unii Europejskiej
+    url: https://www.consilium.europa.eu/pl/rss/pressreleases.ashx
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [sytuacja międzynarodowa, sankcje, komunikaty UE]
+    method: RSS
+    refresh: 6h
+    storage: SUMMARY
+    language: pl
+    license: ponowne wykorzystanie dozwolone z podaniem źródła (https://www.consilium.europa.eu/pl/about-site/copyright/)
+    status: EXCLUDED
+    exclusion_reason: robots.txt zwraca 403 - nie da się sprawdzić zgody na pobieranie, więc ostrożnie nie pobieramy
+
+  - id: ecdc
+    publisher: Europejskie Centrum ds. Zapobiegania i Kontroli Chorób (ECDC)
+    url: https://www.ecdc.europa.eu/en/taxonomy/term/1307/feed
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [zdrowie]
+    method: RSS
+    refresh: 1d
+    storage: SUMMARY
+    language: en
+    license: CC BY 4.0 (https://www.ecdc.europa.eu/en/copyright)
+    status: ACTIVE
+
+  - id: who
+    publisher: Światowa Organizacja Zdrowia (WHO)
+    url: https://www.who.int/rss-feeds/news-english.xml
+    type: OFFICIAL
+    tier: 1
+    role: EVIDENCE
+    topics: [zdrowie]
+    method: RSS
+    refresh: 1d
+    storage: SUMMARY
+    language: en
+    license: brak jawnej licencji na treść stron - przechowujemy tytuł, lead z RSS i link (https://www.who.int/about/policies/publishing/copyright)
+    status: ACTIVE
+
+  # ---------------------------------------------------------------- pomiary
+  - id: imgw-synop
+    publisher: Instytut Meteorologii i Gospodarki Wodnej - PIB
+    url: https://danepubliczne.imgw.pl/api/data/synop
+    type: MEASUREMENT
+    tier: 1
+    role: EVIDENCE
+    topics: [pogoda]
+    method: IMGW_SYNOP
+    refresh: 1h
+    storage: DATA
+    language: pl
+    license: dane publiczne do ponownego wykorzystania, wymagane podanie źródła "IMGW-PIB" (https://danepubliczne.imgw.pl/)
+    status: ACTIVE
+
+  - id: gios-aq
+    publisher: Główny Inspektorat Ochrony Środowiska
+    url: https://api.gios.gov.pl/pjp-api/v1/rest/aqindex/getIndex/{station}
+    type: MEASUREMENT
+    tier: 1
+    role: EVIDENCE
+    topics: [powietrze]
+    method: GIOS_AQ
+    stations: 20
+    refresh: 1h
+    storage: DATA
+    language: pl
+    license: dane publiczne Państwowego Monitoringu Środowiska, z podaniem źródła "GIOŚ" (https://powietrze.gios.gov.pl/)
+    status: ACTIVE
+
+  - id: nbp-kursy
+    publisher: Narodowy Bank Polski
+    url: https://api.nbp.pl/api/exchangerates/tables/A/?format=json
+    type: MEASUREMENT
+    tier: 1
+    role: EVIDENCE
+    topics: [gospodarka, waluty]
+    method: NBP_RATES
+    refresh: 1d
+    storage: DATA
+    language: pl
+    license: kursy walut to dane urzędowe, nie utwór; publiczne API NBP (https://api.nbp.pl/)
+    status: ACTIVE
+
+  # ---------------------------------------------------------------- akty prawne
+  - id: sejm-eli
+    publisher: Kancelaria Sejmu - Dziennik Ustaw (ELI API)
+    url: https://api.sejm.gov.pl/eli/acts/DU/{year}
+    type: LEGAL
+    tier: 1
+    role: EVIDENCE
+    topics: [prawo, komunikaty rządu]
+    method: SEJM_ELI
+    limit: 60
+    refresh: 1d
+    storage: METADATA
+    language: pl
+    license: akty normatywne nie są przedmiotem prawa autorskiego (art. 4 ustawy o prawie autorskim)
+    status: ACTIVE
+
+  # ---------------------------------------------------------------- weryfikacja faktów (źródła wtórne)
+  - id: pravda
+    publisher: Stowarzyszenie Pravda (sygnatariusz IFCN, członek EFCSN)
+    url: https://pravda.org.pl/feed/
+    type: FACT_CHECK
+    tier: 2
+    role: EVIDENCE
+    topics: [dezinformacja]
+    method: RSS
+    refresh: 6h
+    storage: SUMMARY
+    language: pl
+    license: brak jawnej licencji na treść - przechowujemy tytuł, lead z RSS i link
+    status: ACTIVE
+
+  - id: fakenews-pl
+    publisher: FakeNews.pl - Fundacja "Przeciwdziałamy Dezinformacji" (sygnatariusz IFCN)
+    url: https://fakenews.pl/feed/
+    type: FACT_CHECK
+    tier: 2
+    role: EVIDENCE
+    topics: [dezinformacja, zdrowie, społeczeństwo]
+    method: RSS
+    refresh: 6h
+    storage: SUMMARY
+    language: pl
+    license: "© fakenews.pl - przechowujemy tylko tytuł, lead z RSS i link"
+    status: ACTIVE
+
+  - id: euvsdisinfo
+    publisher: EUvsDisinfo (East StratCom Task Force, ESDZ)
+    url: https://euvsdisinfo.eu/
+    type: FACT_CHECK
+    tier: 2
+    role: REFERRAL
+    topics: [dezinformacja, sytuacja międzynarodowa]
+    method: NONE
+    storage: METADATA
+    language: en
+    license: brak jawnej licencji na treść
+    status: EXCLUDED
+    exclusion_reason: robots.txt zabrania pobierania kanałów RSS (Disallow */feed/) - tylko link "sprawdź sam"; dostęp do bazy przez serwer MCP po uzgodnieniu z zespołem EUvsDisinfo
+
+  - id: cedmo
+    publisher: CEDMO - Central European Digital Media Observatory (hub EDMO)
+    url: https://cedmohub.eu/pl/feed/
+    type: FACT_CHECK
+    tier: 2
+    role: EVIDENCE
+    topics: [dezinformacja]
+    method: RSS
+    refresh: 1d
+    storage: SUMMARY
+    language: pl
+    license: brak jawnej licencji na treść - przechowujemy tytuł, lead z RSS i link
+    status: ACTIVE
+
+  # ---------------------------------------------------------------- tylko "sprawdź sam" / wykluczone z pobierania
+  - id: demagog
+    publisher: Stowarzyszenie Demagog (sygnatariusz IFCN, członek EFCSN)
+    url: https://demagog.org.pl/
+    type: FACT_CHECK
+    tier: 2
+    role: REFERRAL
+    topics: [dezinformacja]
+    method: NONE
+    storage: METADATA
+    language: pl
+    license: nie dotyczy - nie pobieramy treści
+    status: EXCLUDED
+    exclusion_reason: serwis blokuje automatyczne pobieranie (HTTP 403); nie obchodzimy zabezpieczeń - tylko link "sprawdź sam"
+
+  - id: afp-sprawdzam
+    publisher: AFP Sprawdzam (członek EFCSN)
+    url: https://sprawdzam.afp.com/
+    type: FACT_CHECK
+    tier: 2
+    role: REFERRAL
+    topics: [dezinformacja]
+    method: NONE
+    storage: METADATA
+    language: pl
+    license: nie dotyczy - nie pobieramy treści
+    status: EXCLUDED
+    exclusion_reason: serwis blokuje automatyczne pobieranie (HTTP 403); nie obchodzimy zabezpieczeń - tylko link "sprawdź sam"
+
+  - id: konkret24
+    publisher: Konkret24 (TVN24)
+    url: https://konkret24.tvn24.pl/
+    type: FACT_CHECK
+    tier: 2
+    role: REFERRAL
+    topics: [dezinformacja]
+    method: NONE
+    storage: METADATA
+    language: pl
+    license: korzystanie z materiałów wymaga zgody i umowy licencyjnej TVN S.A.
+    status: EXCLUDED
+    exclusion_reason: brak licencji na wykorzystanie treści - tylko link "sprawdź sam"
