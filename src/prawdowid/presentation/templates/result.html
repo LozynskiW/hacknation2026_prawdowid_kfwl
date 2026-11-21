@@ -52,18 +52,24 @@
   <section class="result__summary">
     <h2>Podsumowanie</h2>
     <p>{{ view.summary }}</p>
+    {% if view.tally and view.tally != view.summary %}<p class="result__tally">{{ view.tally }}</p>{% endif %}
   </section>
   {% endif %}
 
   {% for claim in view.claims %}
   {%- set kind, icon = labels.get(claim.label, ("unknown", "•")) %}
   <section class="claim claim--{{ kind }}">
-    <p class="claim__label"><span class="claim__icon" aria-hidden="true">{{ icon }}</span>{{ claim.label }}</p>
+    <p class="claim__label"><span class="claim__icon" aria-hidden="true">{{ icon }}</span>{{ claim.label }}
+      {%- if claim.confidence %}<span class="claim__confidence">pewność {{ claim.confidence }}</span>{% endif %}</p>
     <h3 class="claim__text">{{ claim.text }}</h3>
+
+    {% if claim.short_answer %}
+    <p class="claim__answer">{{ claim.short_answer }}</p>
+    {% endif %}
 
     {% if claim.explanation %}
     <div class="claim__meaning">
-      <h4>Co to oznacza</h4>
+      <h4>Uzasadnienie</h4>
       <p>{{ claim.explanation }}</p>
     </div>
     {% endif %}
