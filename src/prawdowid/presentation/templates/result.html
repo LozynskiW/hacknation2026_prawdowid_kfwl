@@ -8,6 +8,9 @@
     status    - IN_PROGRESS | OK | NEEDS_CLARIFICATION | OUT_OF_SCOPE | TECHNICAL_FAILURE
     message   - instrukcja dla statusow niewerdyktowych (co zrobic dalej)
     view      - PresentationModel (base_models/presentation.py), gdy status == OK
+    handoff   - True, gdy sprawa powinna trafic do analityka (tylko rekomendacja)
+    answer    - zwykly tekst modelu, gdy status == TEXT (odpowiedz poza uzgodnionym formatem)
+  Kontekst buduje app_simple/web_view.py.
 #}
 {%- set labels = {
   "Potwierdzone": ("confirmed", "✓"),
@@ -21,6 +24,13 @@
 {#- W trakcie nie ma jeszcze pola odpowiedzi - tylko lekki komunikat; karta pojawia sie z odpowiedzia. -#}
 <p class="answer__busy" role="status"
    hx-get="/wynik/{{ check_id }}" hx-trigger="every 2s" hx-target="this" hx-swap="outerHTML">Sprawdzam w wiarygodnych źródłach…</p>
+
+{% elif status == "TEXT" %}
+{#- Model nie oddal odpowiedzi w uzgodnionym formacie - pokazujemy jego tekst bez kart. -#}
+<article class="result">
+  <p class="result__question"><span>Twoje pytanie</span>{{ question }}</p>
+  <p class="result__text">{{ answer }}</p>
+</article>
 
 {% elif status != "OK" %}
 {#- Statusy niewerdyktowe maja inny wyglad niz werdykty i mowia, co zrobic. -#}
@@ -86,5 +96,9 @@
     {% endif %}
   </section>
   {% endfor %}
+
+  {% if handoff %}
+  <p class="result__handoff">Rekomendujemy przekazanie tej sprawy do analityka.</p>
+  {% endif %}
 </article>
 {% endif %}
