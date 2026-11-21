@@ -6,15 +6,35 @@
   <title>Prawdowid</title>
   <meta name="description" content="Prawdowid - sprawdzanie, czy informacja jest prawdziwa.">
   <link rel="stylesheet" href="/static/css/prawdowid.css">
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
 </head>
 <body>
-  <main class="hero">
-    <!-- Oko, ktore obserwuje wszystko: patrzy na wprost, rozglada sie w lewo i w prawo, mruga i zaczyna od nowa. -->
+  <header class="hero">
+    <!--
+      Oko, ktore obserwuje wszystko. Jeden cykl (9 s):
+      patrzy na wprost -> w lewo -> w prawo -> na wprost -> mruga -> od nowa.
+      Mrugniecie: gorna powieka szybko opada (ok. 110 ms), dolna lekko sie unosi,
+      oko otwiera sie wolniej (ok. 250 ms), a teczowka na chwile zjezdza w dol.
+      Wszystkie animacje maja wspolny zegar SVG, wiec ruch i mrugniecie zawsze sa zgrane.
+    -->
     <figure class="eye" aria-hidden="true">
       <svg class="eye__svg" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
         <defs>
+          <!-- Ksztalt otwartego oka; przy mrugnieciu obie krzywe schodza sie w jedna linie. -->
+          <path id="eye-lids" d="M20 110 Q200 -30 380 110 Q200 250 20 110 Z">
+            <animate attributeName="d" dur="9s" repeatCount="indefinite"
+              calcMode="spline"
+              keyTimes="0; 0.7278; 0.74; 0.7444; 0.7722; 1"
+              keySplines="0 0 1 1; 0.5 0 1 1; 0 0 1 1; 0 0 0.25 1; 0 0 1 1"
+              values="M20 110 Q200 -30 380 110 Q200 250 20 110 Z;
+                      M20 110 Q200 -30 380 110 Q200 250 20 110 Z;
+                      M20 110 Q200 146 380 110 Q200 146 20 110 Z;
+                      M20 110 Q200 146 380 110 Q200 146 20 110 Z;
+                      M20 110 Q200 -30 380 110 Q200 250 20 110 Z;
+                      M20 110 Q200 -30 380 110 Q200 250 20 110 Z"/>
+          </path>
           <clipPath id="eye-shape">
-            <path d="M20 110 Q200 -30 380 110 Q200 250 20 110 Z"/>
+            <use href="#eye-lids"/>
           </clipPath>
           <radialGradient id="sclera" cx="50%" cy="50%" r="60%">
             <stop offset="0%" style="stop-color: var(--cream)"/>
@@ -29,26 +49,70 @@
           <path d="M200 214 V260 M120 198 L100 238 M280 198 L300 238 M50 168 L20 198 M350 168 L380 198"/>
         </g>
 
-        <!-- Oko, ktore zamyka sie przy mrugnieciu -->
-        <g class="eye__lid">
-          <g clip-path="url(#eye-shape)">
-            <rect x="0" y="0" width="400" height="220" fill="url(#sclera)"/>
-            <g class="eye__iris">
-              <circle cx="200" cy="110" r="62" class="eye__iris-base"/>
-              <circle cx="200" cy="110" r="42" class="eye__iris-fibres"/>
-              <circle cx="200" cy="110" r="62" class="eye__iris-ring"/>
-              <circle cx="200" cy="110" r="26" class="eye__pupil"/>
-              <circle cx="186" cy="96" r="8" class="eye__glint"/>
-            </g>
+        <g clip-path="url(#eye-shape)">
+          <rect x="0" y="0" width="400" height="220" fill="url(#sclera)"/>
+          <g class="eye__iris">
+            <animateTransform attributeName="transform" type="translate" dur="9s" repeatCount="indefinite"
+              calcMode="spline"
+              keyTimes="0; 0.1556; 0.1833; 0.3444; 0.3833; 0.5556; 0.5889; 0.7278; 0.7389; 0.7722; 1"
+              keySplines="0 0 1 1; 0.25 0 0.15 1; 0 0 1 1; 0.25 0 0.15 1; 0 0 1 1; 0.25 0 0.15 1; 0 0 1 1; 0.5 0 1 1; 0 0 0.25 1; 0 0 1 1"
+              values="0 0; 0 0; -92 0; -92 0; 92 0; 92 0; 0 0; 0 0; 0 8; 0 0; 0 0"/>
+            <circle cx="200" cy="110" r="62" class="eye__iris-base"/>
+            <circle cx="200" cy="110" r="42" class="eye__iris-fibres"/>
+            <circle cx="200" cy="110" r="62" class="eye__iris-ring"/>
+            <circle cx="200" cy="110" r="26" class="eye__pupil"/>
+            <circle cx="186" cy="96" r="8" class="eye__glint"/>
           </g>
-          <path class="eye__outline" d="M20 110 Q200 -30 380 110 Q200 250 20 110 Z"/>
+          <!-- Cien gornej powieki - nadaje oku glebie. -->
+          <use href="#eye-lids" class="eye__lid-shadow"/>
         </g>
+        <use href="#eye-lids" class="eye__outline"/>
       </svg>
     </figure>
 
     <h1 class="hero__title">PRAWDOWID</h1>
     <p class="hero__tagline">Widzi wszystko. Sprawdza każde słowo.</p>
-    <p class="hero__lead">Wklej informację, a Prawdowid sprawdzi ją w wiarygodnych źródłach i powie, czy to prawda, czy fałsz.</p>
+  </header>
+
+  <main class="check">
+    <!--
+      Jedno pytanie - jedna odpowiedz. Nie ma historii rozmowy:
+      kazde wyslanie formularza zastepuje poprzednia odpowiedz w #answer.
+      Backend zwraca fragment templates/result.html (M7, renderer "web").
+    -->
+    <form class="ask" method="post" action="/wynik"
+          hx-post="/wynik" hx-target="#answer" hx-swap="innerHTML"
+          hx-indicator="#ask-busy" hx-disabled-elt="find button">
+      <label class="ask__label" for="ask-text">Co chcesz sprawdzić?</label>
+      <textarea id="ask-text" name="text" class="ask__input" rows="4" maxlength="5000" required
+                placeholder="Wklej informację, wpis albo link do artykułu."></textarea>
+      <div class="ask__row">
+        <p class="ask__hint">Do 5000 znaków lub jeden link. Nie zapisujemy historii pytań.</p>
+        <button type="submit" class="ask__button">Sprawdź</button>
+      </div>
+      <p id="ask-busy" class="ask__busy" role="status">Sprawdzam w wiarygodnych źródłach…</p>
+    </form>
+
+    <section id="answer" class="answer" aria-live="polite"></section>
   </main>
+
+  <footer class="footer">
+    <p>Odpowiedzi przygotowuje system wspierany przez sztuczną inteligencję na podstawie wiarygodnych źródeł. Pytanie nie jest zapisywane razem z Twoimi danymi.</p>
+  </footer>
+
+  <script>
+    // Osoby z wlaczonym ograniczeniem ruchu widza oko patrzace na wprost.
+    (function () {
+      var svg = document.querySelector('.eye__svg');
+      var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+      function apply() {
+        if (!svg || !svg.pauseAnimations) return;
+        if (mq.matches) { svg.setCurrentTime(0); svg.pauseAnimations(); }
+        else { svg.unpauseAnimations(); }
+      }
+      apply();
+      if (mq.addEventListener) mq.addEventListener('change', apply);
+    })();
+  </script>
 </body>
 </html>

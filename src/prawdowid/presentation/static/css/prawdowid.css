@@ -1,17 +1,25 @@
-/* Prawdowid - styl strony glownej z obserwujacym okiem (inspiracja: okladka "1984"). */
+/* Prawdowid - strona glowna: obserwujace oko (inspiracja: okladka "1984"),
+   pole pytania i jedna odpowiedz pod spodem. */
 
 :root {
   --bg: #121110;
+  --panel: #1d1b19;
+  --panel-edge: #34302b;
   --ink: #efe6d2;
-  --muted: #a89f8c;
+  --muted: #b3aa96;
   --cream: #f3ecdc;
   --cream-shade: #c9bea4;
   --red: #c8102e;
+  --red-bright: #ff5a6e;
   --red-dark: #7a0a1c;
   --iris-dark: #1b1a18;
 
-  /* Jeden cykl animacji: na wprost - lewo - prawo - na wprost - mrugniecie. */
-  --cycle: 9s;
+  /* Kolory werdyktow - zawsze razem z tekstem i ikona, nigdy sam kolor. */
+  --v-confirmed: #6fd69a;
+  --v-false: #ff6b78;
+  --v-misleading: #f2b84b;
+  --v-insufficient: #a9bccd;
+  --v-not-checkable: #c9bea4;
 }
 
 * { box-sizing: border-box; }
@@ -20,29 +28,27 @@ html, body { margin: 0; }
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse at 50% 35%, #2a2623 0%, var(--bg) 65%);
+  background: radial-gradient(ellipse at 50% 0%, #2a2623 0%, var(--bg) 60%) no-repeat;
   background-color: var(--bg);
   color: var(--ink);
   font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  line-height: 1.5;
 }
 
+/* ---------- Naglowek z okiem ---------- */
+
 .hero {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   text-align: center;
-  padding: 48px 16px;
-  gap: 12px;
+  padding: 56px 16px 24px;
+  gap: 10px;
 }
 
-/* ---------- Oko ---------- */
-
 .eye {
-  margin: 0 0 24px;
-  width: min(560px, 100%);
+  margin: 0 0 20px;
+  width: min(460px, 100%);
 }
 
 .eye__svg {
@@ -66,6 +72,14 @@ body {
   stroke-linejoin: round;
 }
 
+/* Miekki cien przy krawedzi powiek (rysowany wewnatrz oka). */
+.eye__lid-shadow {
+  fill: none;
+  stroke: #000;
+  stroke-opacity: .22;
+  stroke-width: 22;
+}
+
 .eye__iris-base { fill: var(--red); }
 
 /* Promieniste wlokna teczowki: gesto przerywany, gruby okrag. */
@@ -85,62 +99,230 @@ body {
 .eye__pupil { fill: var(--iris-dark); }
 .eye__glint { fill: var(--cream); opacity: .9; }
 
-/* Ruch teczowki: na wprost -> lewo -> prawo -> na wprost. */
-.eye__iris {
-  animation: eye-look var(--cycle) ease-in-out infinite;
-}
-
-/* Mrugniecie: cale oko splaszcza sie do linii i otwiera z powrotem. */
-.eye__lid {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: eye-blink var(--cycle) ease-in-out infinite;
-}
-
-@keyframes eye-look {
-  0%, 14%   { transform: translateX(0); }
-  20%, 34%  { transform: translateX(-92px); }
-  42%, 56%  { transform: translateX(92px); }
-  63%, 100% { transform: translateX(0); }
-}
-
-@keyframes eye-blink {
-  0%, 72%   { transform: scaleY(1); }
-  75%       { transform: scaleY(.04); }
-  79%, 100% { transform: scaleY(1); }
-}
-
-/* Uzytkownicy, ktorzy wylaczyli animacje, widza oko patrzace na wprost. */
-@media (prefers-reduced-motion: reduce) {
-  .eye__iris, .eye__lid { animation: none; }
-}
-
-/* ---------- Tekst ---------- */
-
 .hero__title {
   margin: 0;
-  font-size: clamp(2.6rem, 9vw, 5.5rem);
+  font-size: clamp(2.4rem, 8vw, 4.8rem);
   font-weight: 900;
   letter-spacing: .18em;
   line-height: 1;
-  color: var(--ink);
-  /* Litery przesuniete o odstep w prawo; wyrownanie wizualne do srodka. */
+  /* Odstep po ostatniej literze przesuwa napis w lewo - wyrownanie do srodka. */
   padding-left: .18em;
 }
 
 .hero__tagline {
   margin: 0;
-  font-size: clamp(1rem, 2.6vw, 1.35rem);
+  font-size: clamp(.95rem, 2.4vw, 1.25rem);
   font-weight: 700;
   letter-spacing: .12em;
   text-transform: uppercase;
-  color: var(--red);
+  color: var(--red-bright);
 }
 
-.hero__lead {
-  margin: 8px 0 0;
-  max-width: 34rem;
-  font-size: 1rem;
-  line-height: 1.5;
+/* ---------- Pytanie ---------- */
+
+.check {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+}
+
+.ask {
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.ask__label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.ask__input {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  padding: 12px 14px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+}
+
+.ask__input::placeholder { color: #7f776a; }
+
+.ask__input:focus-visible,
+.ask__button:focus-visible {
+  outline: 3px solid var(--red-bright);
+  outline-offset: 2px;
+}
+
+.ask__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ask__hint {
+  margin: 0;
+  font-size: .875rem;
   color: var(--muted);
 }
+
+.ask__button {
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 28px;
+  background: var(--red);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ask__button:hover { background: #a50d26; }
+.ask__button:disabled { opacity: .6; cursor: progress; }
+
+/* Komunikat "Sprawdzam..." widoczny tylko w trakcie zapytania HTMX. */
+.ask__busy {
+  display: none;
+  margin: 12px 0 0;
+  color: var(--muted);
+}
+.ask__busy.htmx-request { display: block; }
+
+/* ---------- Odpowiedz (templates/result.html) ---------- */
+
+.answer:empty { display: none; }
+.answer { margin-top: 20px; }
+
+.result {
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.result__question {
+  margin: 0 0 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--panel-edge);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.result__question span {
+  display: block;
+  margin-bottom: 4px;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.result__status { margin: 0; }
+
+.result__summary h2,
+.result__notice-title {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+}
+
+.result__summary p { margin: 0; }
+
+/* Statusy niewerdyktowe: przerywana ramka zamiast koloru werdyktu. */
+.result--notice { border-style: dashed; border-color: var(--muted); }
+.result__notice-text { margin: 0; }
+
+.claim {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--bg);
+  border-left: 5px solid var(--v, var(--muted));
+}
+
+.claim--confirmed     { --v: var(--v-confirmed); }
+.claim--false         { --v: var(--v-false); }
+.claim--misleading    { --v: var(--v-misleading); }
+.claim--insufficient  { --v: var(--v-insufficient); }
+.claim--not-checkable { --v: var(--v-not-checkable); }
+
+.claim__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-weight: 800;
+  color: var(--v, var(--ink));
+}
+
+.claim__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  background: var(--v, var(--muted));
+  color: var(--bg);
+  font-size: .9em;
+}
+
+.claim__text { margin: 0 0 12px; font-size: 1.05rem; }
+
+.claim__meaning {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.claim__meaning h4,
+.claim__heading {
+  margin: 14px 0 6px;
+  font-size: .8rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.claim__meaning h4 { margin-top: 0; }
+.claim__meaning p { margin: 0; }
+
+.sources { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+
+.source {
+  padding: 10px 12px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 8px;
+}
+
+.source__title { color: var(--ink); font-weight: 700; overflow-wrap: anywhere; }
+.source__meta { margin: 2px 0 0; font-size: .875rem; color: var(--muted); }
+
+.source__quote {
+  margin: 8px 0 0;
+  padding-left: 10px;
+  border-left: 3px solid var(--panel-edge);
+  font-style: italic;
+}
+
+.claim__list { margin: 0; padding-left: 20px; }
+
+/* ---------- Stopka ---------- */
+
+.footer {
+  padding: 0 16px 32px;
+  text-align: center;
+  font-size: .8rem;
+  color: var(--muted);
+}
+
+.footer p { max-width: 40rem; margin: 0 auto; }
