@@ -22,9 +22,13 @@ import asyncio
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI, Form, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+
+from app_simple.web_view import to_template_context
 
 load_dotenv()
 
@@ -36,7 +40,12 @@ SKILL_DIR = Path(os.getenv("SKILL_DIR", "skills/prawdowid"))
 WHITELIST_FILE = Path(os.getenv("WHITELIST_FILE", "config/whitelist.txt"))
 FORMAT_FILE = Path(__file__).with_name("format_odpowiedzi.md")
 
+# Front WWW (szablony + statyczne pliki) z modułu presentation.
+WEB_DIR = Path(__file__).resolve().parents[1] / "src" / "prawdowid" / "presentation"
+
 app = FastAPI(title="PRAWDOWID")
+app.mount("/static", StaticFiles(directory=WEB_DIR / "static"), name="static")
+templates = Jinja2Templates(directory=WEB_DIR / "templates")
 
 
 class CheckIn(BaseModel):
@@ -162,15 +171,45 @@ async def _ask_ai_once(system: str, message: str) -> str:
         raise ValueError(f"Nieznany AI_PROVIDER: {AI_PROVIDER} (dozwolone: gemini, anthropic, openai)")
 
 
-def error(message: str) -> JSONResponse:
-    # Awaria to nie wynik sprawdzenia – bot pokaże ją jako błąd techniczny.
-    return JSONResponse(status_code=503, content={"status": "TECHNICAL_FAILURE", "statusMessage": message})
+def failure(message: str) -> dict:
+    # Awaria to nie wynik sprawdzenia – kanały pokazują ją jako błąd techniczny.
+    return {"status": "TECHNICAL_FAILURE", "statusMessage": message}
 
 
-@app.get("/")
-async def index() -> FileResponse:
-    """Strona WWW – woła ten sam /api/v1/check co bot."""
-    return FileResponse(Path(__file__).with_name("index.html"))
+async def run_check(body: CheckIn) -> dict:
+    """Wspólna logika dla API (bot) i strony WWW. Zwraca raport, {"answer": tekst} albo awarię."""
+    if not (body.text or body.url):
+        return failure("Brak treści do sprawdzenia.")
+    if not AI_API_KEY or not AI_MODEL:
+        return failure("Brak konfiguracji dostawcy AI (AI_API_KEY / AI_MODEL).")
+    try:
+        answer = await ask_ai(load_skill(), user_message(body))
+    except httpx.TimeoutException:
+        return failure("Dostawca AI nie odpowiedział na czas. Spróbuj ponownie.")
+    except httpx.HTTPStatusError as e:
+        print(e.response.text)
+        return failure(f"Dostawca AI zwrócił błąd {e.response.status_code}.")
+    except (httpx.HTTPError, KeyError, IndexError, OSError) as e:
+        return failure(f"Nie udało się wykonać sprawdzenia ({type(e).__name__}).")
+    # Model zwrócił JSON w uzgodnionym formacie → karty; inaczej → zwykły tekst.
+    return to_report(answer) or {"answer": answer}
+
+
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
+    """Strona WWW: obserwujące oko i pole pytania."""
+    return templates.TemplateResponse(request, "index.html")
+
+
+@app.post("/wynik", response_class=HTMLResponse)
+async def web_check(request: Request, text: str = Form("")):
+    """Formularz ze strony (HTMX): ta sama logika co /api/v1/check, wynik jako fragment HTML."""
+    text = text.strip()
+    # Sam link w polu traktujemy jak link do sprawdzenia, resztę jak tekst.
+    is_url = re.fullmatch(r"https?://\S+", text) is not None
+    body = CheckIn(channel="WEB", text=None if is_url else text or None, url=text if is_url else None)
+    report = await run_check(body)
+    return templates.TemplateResponse(request, "result.html", to_template_context(report, question=text))
 
 
 @app.get("/health")
@@ -181,18 +220,7 @@ async def health() -> dict:
 
 @app.post("/api/v1/check")
 async def check(body: CheckIn):
-    if not (body.text or body.url):
-        return error("Brak treści do sprawdzenia.")
-    if not AI_API_KEY or not AI_MODEL:
-        return error("Brak konfiguracji dostawcy AI (AI_API_KEY / AI_MODEL).")
-    try:
-        answer = await ask_ai(load_skill(), user_message(body))
-    except httpx.TimeoutException:
-        return error("Dostawca AI nie odpowiedział na czas. Spróbuj ponownie.")
-    except httpx.HTTPStatusError as e:
-        print(e.response.text)
-        return error(f"Dostawca AI zwrócił błąd {e.response.status_code}.")
-    except (httpx.HTTPError, KeyError, IndexError, OSError) as e:
-        return error(f"Nie udało się wykonać sprawdzenia ({type(e).__name__}).")
-    # Model zwrócił JSON w uzgodnionym formacie → karty w bocie; inaczej → zwykły tekst.
-    return to_report(answer) or {"answer": answer}
+    result = await run_check(body)
+    if result.get("status") == "TECHNICAL_FAILURE" and "checkId" not in result:
+        return JSONResponse(status_code=503, content=result)
+    return result
