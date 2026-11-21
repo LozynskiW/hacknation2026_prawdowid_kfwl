@@ -103,6 +103,10 @@
       }
 
       input.addEventListener('input', fit);
+      // Po kliknieciu czcionka rosnie (CSS) - wysokosc pola przeliczamy, gdy zmiana sie skonczy.
+      input.addEventListener('focus', fit);
+      input.addEventListener('blur', fit);
+      input.addEventListener('transitionend', fit);
       input.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
           e.preventDefault();
