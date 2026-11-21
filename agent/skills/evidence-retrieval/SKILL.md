@@ -1,6 +1,6 @@
 ---
 name: evidence-retrieval
-description: Automatycznie przeszukuje zweryfikowane bazy wiedzy, rejestry publiczne (np. ISAP, BIP, dane.gov.pl) oraz serwisy fact-checkingowe na podstawie listy ./resources/allowed_pages.md. Weryfikuje daty publikacji i flaguje dane archiwalne.
+description: Automatycznie przeszukuje zweryfikowane bazy wiedzy, rejestry publiczne (np. ISAP, BIP, dane.gov.pl) oraz serwisy fact-checkingowe na podstawie listy dozwolonych źródeł. Weryfikuje daty publikacji i flaguje dane archiwalne.
 version: 1.0.0
 tags: [fact-checking, evidence-retrieval, search, archival-verification, open-data]
 ---
@@ -30,7 +30,7 @@ Dla każdego otrzymanego twierdzenia atomowego (`TWIERDZENIE-XXX`):
 1. Wyodrębnij encje kluczowe (`entities_involved`), daty (`temporal_context`) oraz słowa kluczowe.
 2. Sformułuj celowane słowa kluczowe i zapytania szukające bez użycia przymiotników wartościujących.
 3. Konstruuj zapytania według wzorów:
-   - `site:<domena_z_allowed_pages> "<kluczowa_encja>" "<konkretna_liczba_lub_fakt>"`
+   - `site:<domena_z_dozwolonych_zródeł> "<kluczowa_encja>" "<konkretna_liczba_lub_fakt>"`
    - `site:isap.sejm.gov.pl "<nazwa_ustawy_lub_hasło>"`
    - `site:demagog.org.pl "<weryfikowane_twierdzenie>"`
 
