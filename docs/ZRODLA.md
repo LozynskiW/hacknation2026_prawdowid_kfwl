@@ -95,3 +95,19 @@ Status źródła ani domena nie przesądzają o prawdziwości konkretnego twierd
 - **Krótkie wpisy:** źródła bez jawnej licencji (CERT Polska, WHO, Policja, Pravda, FakeNews.pl, CEDMO) mają w korpusie tylko tytuł, lead i link. Dowód z nich wymaga otwarcia linku.
 - **Kanały blokowane:** dwie największe polskie organizacje fact-checkingowe blokują automaty (Demagog, AFP Sprawdzam), a Konkret24 wymaga licencji. Ich wyniki mogą trafiać do systemu przez Google Fact Check Tools API (wymaga klucza), które zbiera oznaczenia ClaimReview.
 - **Domena a host:** filtr w `app_simple` porównuje dokładny host. Cytat z innej subdomeny tego samego wydawcy (np. `ecdc.europa.eu` zamiast `www.ecdc.europa.eu`) zostanie odrzucony.
+
+## Serwisy gov.pl (lista dla skilla)
+
+[`config/govpl_whitelist.json`](../config/govpl_whitelist.json) zawiera wszystkie serwisy instytucji na www.gov.pl. Jeden wpis to jeden serwis (`https://www.gov.pl/web/<jednostka>`) i obejmuje wszystkie jego podstrony. Każdy wpis ma pola:
+- `linkDoStrony`,
+- `krótkiOpisZawartości` (nazwa jednostki, działalność, sekcje serwisu),
+- `tagi` (kategoria z katalogu gov.pl i tematy),
+- `licencja`.
+
+Źródło spisu: katalog jednostek gov.pl oraz serwisy, do których linkują strony jednostek (np. stacje powiatowe, komendy PSP). Adresy, które przekierowują na stronę główną gov.pl (nieistniejące serwisy), są pomijane. Odświeżenie:
+
+```bash
+python scripts/govpl_sites.py
+```
+
+Przebieg trwa ok. 20 minut, z przerwą 0,5 s między zapytaniami do gov.pl.
