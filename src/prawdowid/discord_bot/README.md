@@ -24,7 +24,7 @@ Odpowiedź: `VerificationReport` (`models/report.py`). Bot czyta ją tolerancyjn
 4. ID serwera testowego (tryb deweloperski w Discordzie → PPM na serwer → Kopiuj ID) do `DISCORD_GUILD_ID` – komendy pojawią się od razu.
 
 ## Uruchomienie lokalne
-Z katalogu głównego repozytorium, `.env` uzupełniony o `DISCORD_TOKEN`, `DISCORD_GUILD_ID`, `BOT_USER_SALT`:
+`.env` w katalogu głównym repozytorium uzupełniony o `DISCORD_TOKEN`, `DISCORD_GUILD_ID`, `BOT_USER_SALT`. Bot czyta ten plik niezależnie od katalogu, z którego go uruchomisz:
 ```bash
 # terminal 1 - backend
 uvicorn prawdowid.api.app:app --port 8000

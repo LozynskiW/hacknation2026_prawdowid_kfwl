@@ -1,11 +1,18 @@
 """Konfiguracja bota – wyłącznie ze zmiennych środowiskowych / pliku .env."""
 
+from pathlib import Path
+
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+# .env z katalogu głównego repozytorium (src/prawdowid/discord_bot/config.py -> 3 poziomy wyżej),
+# niezależnie od katalogu, z którego uruchomiono bota.
+ENV_FILE = Path(__file__).resolve().parents[3] / ".env"
+
+
 class BotSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_prefix="", extra="ignore", env_ignore_empty=True)
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="", extra="ignore", env_ignore_empty=True)
 
     discord_token: SecretStr = Field(alias="DISCORD_TOKEN")
     # Gdy ustawione – komendy synchronizują się natychmiast na tym serwerze (wygodne w trakcie developmentu).
