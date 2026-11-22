@@ -16,6 +16,7 @@
   var input = document.getElementById('ask-text');
   var form = document.querySelector('.ask');
   var answer = document.getElementById('answer');
+  var figure = document.querySelector('.eye');
   if (!svg || !lids || !iris) return;
 
   // ---- Geometria (jednostki viewBox 0 0 400 220) ----
@@ -73,12 +74,24 @@
     return { x: 0, y: 0 };
   }
 
+  // ---- Kolor oka (CSS: .eye[data-mood]) ----
+  // Pisanie i czekanie - zolte; potem kolor wyniku (positive / negative / neutral) az do
+  // kolejnego pisania; bez wyniku - niebieskie (idle).
+  var resultMood = null;
+
+  function applyMood() {
+    if (!figure) return;
+    figure.setAttribute('data-mood', mode === 'idle' ? (resultMood || 'idle') : 'busy');
+  }
+
   function setMode(m) {
-    if (m === mode) return;
-    mode = m;
-    modeStart = now();
-    lastWaitT = 0;
-    if (reduce.matches) render(1);
+    if (m !== mode) {
+      mode = m;
+      modeStart = now();
+      lastWaitT = 0;
+      if (reduce.matches) render(1);
+    }
+    applyMood();
   }
 
   // ---- Pozycja kursora tekstowego w polu (kopia pola w ukrytym divie) ----
@@ -177,17 +190,23 @@
   }
 
   if (form) {
-    form.addEventListener('htmx:beforeRequest', function () { setMode('waiting'); });
+    form.addEventListener('htmx:beforeRequest', function () { resultMood = null; setMode('waiting'); });
   }
 
-  // Odpowiedz gotowa, gdy w #answer nie ma juz elementu, ktory odpytuje serwer.
+  // Odpowiedz gotowa: kolor oka wedlug wyniku (data-outcome w templates/result.html).
   document.addEventListener('htmx:afterSettle', function () {
-    if (mode === 'waiting' && answer && !answer.querySelector('[hx-trigger]')) setMode('idle');
+    if (mode !== 'waiting' || !answer || answer.querySelector('[hx-trigger]')) return;
+    var result = answer.querySelector('[data-outcome]');
+    resultMood = result ? result.getAttribute('data-outcome') : 'neutral';
+    setMode('idle');
   });
-  document.addEventListener('htmx:afterRequest', function (e) {
-    if (mode === 'waiting' && !e.detail.successful) setMode('idle');
-  });
-  document.addEventListener('htmx:sendError', function () { if (mode === 'waiting') setMode('idle'); });
+  function failed() {
+    if (mode !== 'waiting') return;
+    resultMood = 'neutral';
+    setMode('idle');
+  }
+  document.addEventListener('htmx:afterRequest', function (e) { if (!e.detail.successful) failed(); });
+  document.addEventListener('htmx:sendError', failed);
 
   requestAnimationFrame(frame);
 })();

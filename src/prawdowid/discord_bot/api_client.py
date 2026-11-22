@@ -66,8 +66,18 @@ class PrawdowidClient:
         if isinstance(report, str):
             return CheckOutcome(answer=report, latency_ms=int((time.monotonic() - started) * 1000))
         latency = int((time.monotonic() - started) * 1000)
-        log.info("check done conversation=%s latency_ms=%s ok=%s", conversation_id, latency, failure is None)
+        # Powód awarii to nasz stały komunikat (bez treści użytkownika) - widać go w logu bota.
+        log.info("check done conversation=%s latency_ms=%s ok=%s%s", conversation_id, latency, failure is None,
+                 f" failure={failure!r}" if failure else "")
         return CheckOutcome(report=report, failure=failure, latency_ms=latency)
+
+    async def delete(self, check_id: str) -> bool | None:
+        """Usuwa sprawdzenie z logu backendu. True - usunięto, False - nie było go, None - błąd techniczny."""
+        try:
+            resp = await self._http.delete(f"/api/v1/checks/{check_id}")
+        except httpx.HTTPError:
+            return None
+        return bool(_safe_json(resp).get("deleted")) if resp.status_code == 200 else None
 
     async def _check(self, payload: dict) -> tuple[ReportView | None, str | None]:
         try:
@@ -100,9 +110,9 @@ class PrawdowidClient:
 
     @staticmethod
     def _parse(resp: httpx.Response) -> tuple[ReportView | str | None, str | None]:
-        if resp.status_code == 429:
-            return None, MSG_RATE_LIMITED
         body = _safe_json(resp)
+        if resp.status_code == 429:
+            return None, body.get("statusMessage") or MSG_RATE_LIMITED
         if resp.status_code >= 400:
             # Backend może zwrócić {"status": "TECHNICAL_FAILURE", "statusMessage": "..."}
             return None, body.get("statusMessage") or MSG_UNAVAILABLE
@@ -111,7 +121,8 @@ class PrawdowidClient:
         try:
             return ReportView.model_validate(body), None
         except ValidationError as exc:
-            log.warning("invalid report from api: %s errors", exc.error_count())
+            # Tylko nazwy pól i typ błędu - bez treści raportu.
+            log.warning("invalid report from api: %s", "; ".join(f"{'.'.join(map(str, e['loc']))}: {e['type']}" for e in exc.errors()))
             return None, MSG_BAD_RESPONSE
 
 

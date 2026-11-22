@@ -24,6 +24,7 @@ SUMMARY_WORDS = {
 DEFAULT_MESSAGES = {
     "NEEDS_CLARIFICATION": "Napisz dokładniej, którą informację mamy sprawdzić, albo wklej link do artykułu.",
     "OUT_OF_SCOPE": "Tej informacji nie sprawdzamy - jest poza tematami, którymi się zajmujemy.",
+    "RATE_LIMITED": "Za dużo zapytań w krótkim czasie. Spróbuj ponownie za minutę.",
     "TECHNICAL_FAILURE": "Spróbuj ponownie za chwilę.",
 }
 

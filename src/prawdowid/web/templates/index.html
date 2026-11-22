@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Prawdowid</title>
   <meta name="description" content="Prawdowid - sprawdzanie, czy informacja jest prawdziwa.">
-  <link rel="stylesheet" href="/static/css/prawdowid.css">
+  <link rel="stylesheet" href="/static/css/prawdowid.css?v={{ static_version }}">
   <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
-  <script src="/static/js/eye.js" defer></script>
+  <script src="/static/js/eye.js?v={{ static_version }}" defer></script>
 </head>
 <body>
   <header class="hero">
@@ -17,7 +17,7 @@
       - pisanie: otwiera sie i sledzi kursor tekstowy w polu pytania,
       - czekanie na odpowiedz: rozglada sie w lewo i w prawo i mruga, w petli.
     -->
-    <figure class="eye" aria-hidden="true">
+    <figure class="eye" data-mood="idle" aria-hidden="true">
       <svg class="eye__svg" viewBox="0 -44 400 308" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <!-- Ksztalt otwartego oka; przy mrugnieciu obie krzywe schodza sie w jedna linie. -->
@@ -90,7 +90,7 @@
   </main>
 
   <footer class="footer">
-    <p>Odpowiedzi przygotowuje system wspierany przez sztuczną inteligencję na podstawie wiarygodnych źródeł. Do 5000 znaków lub jeden link. Nie zapisujemy historii pytań.</p>
+    <p>Odpowiedzi przygotowuje system wspierany przez sztuczną inteligencję na podstawie wiarygodnych źródeł. Do 5000 znaków lub jeden link. Pytania zapisujemy bez danych osobowych na 7 dni (kontrola jakości), potem je usuwamy - każde sprawdzenie możesz usunąć od razu.</p>
   </footer>
 
   <script>
@@ -145,7 +145,7 @@
         faces.forEach(function (old) {
           if (!roll || still.matches) { old.remove(); return; }
           old.classList.add('thinking__face--out');
-          setTimeout(function () { old.remove(); }, 700);
+          setTimeout(function () { old.remove(); }, 300);
         });
         if (roll && !still.matches) face.classList.add('thinking__face--in');
         thinking.appendChild(face);

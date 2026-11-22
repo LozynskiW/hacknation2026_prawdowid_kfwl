@@ -53,14 +53,12 @@ class PrawdowidBot(discord.Client):
     def _register_commands(self) -> None:
         @self.tree.command(name="sprawdz", description="Sprawdź informację w wiarygodnych źródłach")
         @app_commands.describe(
-            tresc="Tekst do sprawdzenia (np. wiadomość, którą dostałeś)",
-            link="Adres strony do sprawdzenia (opcjonalnie)",
+            tresc="Tekst do sprawdzenia - może zawierać link (np. wiadomość, którą dostałeś)",
             prywatnie="Pokaż wynik tylko mnie",
         )
         async def sprawdz(
             interaction: discord.Interaction,
-            tresc: str | None = None,
-            link: str | None = None,
+            tresc: str,
             prywatnie: bool = False,
         ) -> None:
             # Discord wymaga reakcji w ciągu 3 s – od razu "Bot myśli…", wynik dosyłamy (token ważny 15 min).
@@ -68,10 +66,25 @@ class PrawdowidBot(discord.Client):
             embeds = await self._handle(
                 user_id=interaction.user.id,
                 raw_text=tresc,
-                raw_url=link,
+                raw_url=None,  # link wyciągamy z treści (_normalize_input)
                 conversation_id=f"{interaction.channel_id}:{interaction.id}",
             )
             await interaction.followup.send(embeds=embeds, ephemeral=prywatnie)
+
+        @self.tree.command(name="usun", description="Usuń swoje sprawdzenie z logu Prawdowida")
+        @app_commands.describe(identyfikator="Identyfikator ze stopki wyniku, np. chk_1a2b3c4d5e6f")
+        async def usun(interaction: discord.Interaction, identyfikator: str) -> None:
+            check_id = identyfikator.strip()
+            if not re.fullmatch(r"chk_[0-9a-f]{12}", check_id):
+                await interaction.response.send_message(
+                    embed=render.input_error_embed("To nie wygląda na identyfikator sprawdzenia (np. `chk_1a2b3c4d5e6f`)."),
+                    ephemeral=True)
+                return
+            deleted = await self.api.delete(check_id)
+            text = {True: "Usunięto. Po tym sprawdzeniu nie ma śladu w logu.",
+                    False: "Nie ma takiego sprawdzenia - mogło zostać już usunięte.",
+                    None: "Nie udało się teraz usunąć. Spróbuj ponownie za chwilę."}[deleted]
+            await interaction.response.send_message(text, ephemeral=True)
 
         @self.tree.command(name="pomoc", description="Jak działa Prawdowid")
         async def pomoc(interaction: discord.Interaction) -> None:
@@ -115,7 +128,9 @@ class PrawdowidBot(discord.Client):
         full_url = None
         if outcome.report and outcome.report.check_id and self.settings.web_result_url_template:
             full_url = self.settings.web_result_url_template.format(check_id=outcome.report.check_id)
-        return render.render(outcome, full_url)
+        # Pytanie pokazujemy na górze odpowiedzi, jak na stronie WWW.
+        question = text if not url or (text and url in text) else "\n".join(filter(None, [text, url]))
+        return render.render(outcome, full_url, question=question)
 
     def _user_ref(self, user_id: int) -> str:
         """Pseudonim użytkownika: HMAC-SHA256 z solą – surowe ID Discorda nie opuszcza bota."""
@@ -148,7 +163,8 @@ def _normalize_input(raw_text: str | None, raw_url: str | None) -> tuple[str | N
     if text is None and url is None:
         return None, None, (
             "Wklej tekst lub link do sprawdzenia, np.\n"
-            "`/sprawdz tresc: Czy w Warszawie wprowadzono alert RCB o skażeniu?`"
+            "`/sprawdz tresc: Czy w Warszawie wprowadzono alert RCB o skażeniu?`\n"
+            "Link wklej po prostu w treści."
         )
     if text and len(text) > MAX_TEXT_LENGTH:
         return None, None, f"Tekst jest za długi (maks. {MAX_TEXT_LENGTH} znaków). Skróć go do najważniejszej części."

@@ -5,6 +5,16 @@ Lista źródeł, z których może korzystać agent weryfikacji, razem z licencja
 - **Co agent może pobrać i co pokazujemy jako dowód:** reguły `webfetch` w [`.opencode/opencode.jsonc`](../.opencode/opencode.jsonc). OpenCode blokuje agentowi każdy inny adres, a backend (`src/prawdowid/api/sources.py`) tymi samymi wzorcami odrzuca w raporcie źródło spoza listy. Opisy stron dla agenta: skill [`allowed-data-sources`](../.opencode/skills/allowed-data-sources/SKILL.md).
 - **Korpus demonstracyjny i licencje (audyt):** [`config/sources.yaml`](../config/sources.yaml), budowany przez `scripts/build_corpus.py`.
 
+## Linki od użytkownika
+
+Agent pobiera wyłącznie strony z listy dozwolonych, także wtedy, gdy link przysłał użytkownik. To świadoma decyzja ze względów bezpieczeństwa:
+- nie pobieramy dowolnych adresów wskazanych z zewnątrz, w tym stron z ukrytymi instrukcjami dla modelu (prompt injection), adresów wewnętrznych i stron, które śledzą odwiedzających;
+- system nie łączy się z serwisami, których warunki korzystania nie są sprawdzone.
+
+Gdy link prowadzi poza listę (np. artykuł z portalu informacyjnego), system nie wydaje werdyktu. Zwraca status „Potrzebujemy doprecyzowania” z prośbą o wklejenie treści artykułu albo spornych cytatów. Wklejony tekst jest sprawdzany normalnie: agent wyodrębnia z niego twierdzenia i szuka dowodów w źródłach z listy.
+
+Link do strony z listy (np. komunikat na gov.pl) agent pobiera i sprawdza bezpośrednio.
+
 ## Wymagania zadania i stan
 
 Zadanie (sekcja 5, „Źródła”): korpus demonstracyjny min. **100 dokumentów lub rekordów**, min. **10 domen**, co najmniej **dwa typy źródeł** (pierwotne lub urzędowe + wiarygodne wtórne), lista dostępna do audytu.

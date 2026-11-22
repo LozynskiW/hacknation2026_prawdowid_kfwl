@@ -4,11 +4,12 @@
 
   Kontekst:
     question  - tekst pytania uzytkownika
-    status    - TEXT | OK | NEEDS_CLARIFICATION | OUT_OF_SCOPE | TECHNICAL_FAILURE
+    status    - TEXT | OK | NEEDS_CLARIFICATION | OUT_OF_SCOPE | RATE_LIMITED | TECHNICAL_FAILURE
     message   - instrukcja dla statusow niewerdyktowych (co zrobic dalej)
     view      - summary, tally i claims (text, label, short_answer, confidence, explanation, sources, warnings, unknowns), gdy status == OK
     handoff   - True, gdy sprawa powinna trafic do analityka (tylko rekomendacja)
     answer    - zwykly tekst modelu, gdy status == TEXT (odpowiedz poza uzgodnionym formatem)
+    check_id  - identyfikator sprawdzenia w logu (przycisk "Usun teraz")
   Kontekst buduje src/prawdowid/api/web_view.py.
 #}
 {%- set labels = {
@@ -19,27 +20,46 @@
   "Nie podlega weryfikacji (opinia lub prognoza)": ("not-checkable", "–"),
 } -%}
 
+{#- Stopka każdego wyniku: ograniczenia odpowiedzi (FR-45) i usunięcie sprawdzenia z logu (FR-82). -#}
+{%- macro result_footer(limits=true) -%}
+<footer class="result__footer">
+  {%- if limits %}
+  <p class="result__limits"><strong>Ograniczenia:</strong> sprawdzamy tylko w źródłach z zamkniętej listy (głównie urzędowych),
+    a wynik przygotowuje system z użyciem SI i może się mylić. Otwórz źródła i przeczytaj je samodzielnie.</p>
+  {%- endif %}
+  {%- if check_id %}
+  <form class="result__forget" hx-post="/wynik/{{ check_id }}/usun" hx-target="this" hx-swap="outerHTML">
+    Zapisujemy to sprawdzenie bez danych osobowych na kontrolę jakości, potem je usuwamy.<button type="submit">Usuń teraz</button>
+  </form>
+  {%- endif %}
+</footer>
+{%- endmacro %}
+
 {% if status == "TEXT" %}
 {#- Model nie oddal odpowiedzi w uzgodnionym formacie - pokazujemy jego tekst bez kart. -#}
-<article class="result">
+<article class="result" data-outcome="neutral">
   <p class="result__question"><span>Twoje pytanie</span>{{ question }}</p>
   <p class="result__text">{{ answer }}</p>
+  {{ result_footer() }}
 </article>
 
 {% elif status != "OK" %}
 {#- Statusy niewerdyktowe maja inny wyglad niz werdykty i mowia, co zrobic. -#}
-<div class="result result--notice result--{{ status | lower | replace('_', '-') }}">
+<div class="result result--notice result--{{ status | lower | replace('_', '-') }}" data-outcome="neutral">
   <p class="result__question"><span>Twoje pytanie</span>{{ question }}</p>
   <h2 class="result__notice-title">
     {%- if status == "NEEDS_CLARIFICATION" %}Potrzebujemy doprecyzowania
     {%- elif status == "OUT_OF_SCOPE" %}Poza zakresem sprawdzania
+    {%- elif status == "RATE_LIMITED" %}Za dużo zapytań
     {%- else %}Nie udało się teraz sprawdzić{% endif -%}
   </h2>
   <p class="result__notice-text">{{ message }}</p>
+  {{ result_footer(limits=false) }}
 </div>
 
 {% else %}
-<article class="result">
+{#- data-outcome steruje kolorem oka: positive (zielone), negative (czerwone), neutral (szare). -#}
+<article class="result" data-outcome="{{ outcome }}">
   <p class="result__question"><span>Twoje pytanie</span>{{ question }}</p>
 
   {% if view.summary %}
@@ -100,5 +120,6 @@
   {% if handoff %}
   <p class="result__handoff">Rekomendujemy przekazanie tej sprawy do analityka.</p>
   {% endif %}
+  {{ result_footer() }}
 </article>
 {% endif %}
