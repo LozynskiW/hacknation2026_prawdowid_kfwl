@@ -1,6 +1,6 @@
 ---
 name: claim-extraction
-description: Użyj do wyodrębnianie z polecenia użytkownika faktów, twierdzeń, opinii w celu weryfikacji konkretnych instrukcji, które możnaby weryfikować
+description: Użyj do wyodrębniania z polecenia użytkownika faktów, twierdzeń, opinii w celu weryfikacji konkretnych instrukcji, które możnaby weryfikować
 version: 1.0.0
 tags: [fact-checking, claim-extraction, nlp, verification]
 ---
@@ -34,13 +34,13 @@ Jesteś wyspecjalizowanym agentem analitycznym w potoku fact-checkingowym. Twoim
 2. Zidentyfikuj i odrzuć wszelkie autorskie komentarze oraz dorozumiane interpretacje modelu LLM.
 
 ### Krok 2: Dekompozycja na Zdania i Wyodrębnianie Twierdzeń
-dla każdego akapitu / zdania w materiale wejściowym:
+Dla każdego akapitu / zdania w materiale wejściowym:
 1. Określ, czy wypowiedź zawiera komponent faktograficzny.
 2. Jeśli zdanie zawiera opinie połączone z faktami (np. *"Niestety ten fatalny rząd podniósł podatki o 15%"*), **wyizoluj wyłącznie komponent faktograficzny** (*"Rząd podniósł podatki o 15%"*).
 3. Podziel zdania złożone na niezależne twierdzenia atomowe.
 
 ### Krok 3: Rekonstrukcja i Normalizacja Twierdzeń
-dla każdego wyodrębnionego twierdzenia:
+Dla każdego wyodrębnionego twierdzenia:
 1. Zastąp zaimki i uogólnienia precyzyjnymi nazwami własnymi, datami i lokalizacjami z tekstu kontekstowego.
 2. Przypisz typ twierdzenia (np. `NUMERYCZNE`, `STATYSTYCZNE`, `HISTORYCZNE`, `CYTAT`, `ZDARZENIE`, `POLITYKA_PUBLICZNA`).
 3. Określ poziom weryfikowalności (`WYSOKI`, `ŚREDNI`, `NISKI`, `BRAK`).

@@ -1,6 +1,6 @@
 ---
 name: allowed-data-sources
-description: Użyj gdy musisz wyszukiwać weryfikować dane w oparciu o zaufane i pewne źródła informacji
+description: Użyj gdy musisz wyszukiwać i weryfikować dane w oparciu o zaufane i pewne źródła informacji
 version: 1.0.0
 tags: [fact-checking, input-validation, safety, prompt-injection-defense, formatting]
 ---

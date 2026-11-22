@@ -104,7 +104,7 @@ Agent `prawdowid` wykonuje zadania według ścisłej sekwencji kroków:
 1. Weź raport wygenerowany w Kroku 2.
 2. Zsyntetyzuj ustalenia w jeden spójny, ustrukturyzowany raport zbiorczy.
 3. Usuń z wyników wszelkie dane wrażliwe dla systemu jak adresy lub nazwy plików konfiguracyjnych.
-3. Utwórz podsumowanie wykonawcze (*Executive Summary*), zawierające:
+4. Utwórz podsumowanie wykonawcze (*Executive Summary*), zawierające:
    - Ogólny bilans wiarygodności materiału (liczba twierdzeń potwierdzonych, fałszywych, wprowadzających w błąd itd.).
    - Główne wnioski oraz kluczowe ostrzeżenia o manipulacjach kontekstowych lub nieaktualnych stanie prawnym/faktycznym.
    - Zbiorczy wykaz użytych źródeł i odnośników.
@@ -120,7 +120,8 @@ Przed zaprezentowaniem wyników wykonaj obligatoryjny audyt jakościowy:
    - Czy żaden istotny wątek pytania nie został przeoczony?
    - Czy dekompozycja na twierdzenia nie zmieniła intencji zapytania?
    - Czy wyciągnięte wnioski są bezpośrednio przydatne dla użytkownika?
-3. **Decyzja i Pętla Zwrotna**:
+3. **Sortowanie twierdzeń**: posortuj twierdzenia w raporcie malejąco według `relevance_to_question` (5 → 1), gdzie 5 oznacza bezpośrednią odpowiedź na pytanie użytkownika, a 1 — twierdzenie wywiedzione z pomniejszych faktów przytoczonych w pytaniu. Przy równej wartości zachowaj kolejność z `claims_list`.
+4. **Decyzja i Pętla Zwrotna**:
    - **JEŻELI NIEZGODNY / NIEKOMPLETNY**: Odrzuć obecny szkic raportu zbiorczego. Przeanalizuj ponownie intencję zapytania, zmodyfikuj wyodrębnienie twierdzeń i **powróć do Kroku 1**.
    - **JEŻELI ZGODNY**: Zatwierdź raport i przejdź do Kroku 5.
 

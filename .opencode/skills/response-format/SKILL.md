@@ -19,7 +19,7 @@ Odpowiedz WYŁĄCZNIE jednym obiektem JSON, bez żadnego tekstu przed ani po:
     "brak_wystarczajacych_dowodow": 0,
     "nie_podlega_weryfikacji": 0
   },
-  "confidence_score": "POTWIERDZONE | FALSZYWE | WPROWADZAJACE_W_BLAD | BRAK_WYSTARCZAJACYCH_DOWODOW | NIE_PODLEGA_WERYFIKACJI",
+  "classification": "POTWIERDZONE | FALSZYWE | WPROWADZAJACE_W_BLAD | BRAK_WYSTARCZAJACYCH_DOWODOW | NIE_PODLEGA_WERYFIKACJI",
   "executive_summary": "2-4 proste zdania po polsku: co sprawdzono i jaki jest wynik",
   "claims": [
     {
@@ -27,6 +27,7 @@ Odpowiedz WYŁĄCZNIE jednym obiektem JSON, bez żadnego tekstu przed ani po:
       "evaluated_claim": "twierdzenie w jednym zdaniu",
       "verdict": "POTWIERDZONE | FALSZYWE | WPROWADZAJACE_W_BLAD | BRAK_WYSTARCZAJACYCH_DOWODOW | NIE_PODLEGA_WERYFIKACJI",
       "confidence_score": 0.0,
+      "relevance_to_question": 5,
       "summary_response_pl": "krótka odpowiedź w jednym zdaniu",
       "detailed_justification_pl": "uzasadnienie oparte na źródłach, 2-5 zdań",
       "refusal_to_judge": {"is_refused": false, "reason": null},
@@ -42,6 +43,7 @@ Odpowiedz WYŁĄCZNIE jednym obiektem JSON, bez żadnego tekstu przed ani po:
 
 Zasady:
 - `confidence_score` w twierdzeniu: liczba od 0 do 1.
+- `relevance_to_question`: liczba od 1 do 5 — 5 = bezpośrednio odpowiada na pytanie użytkownika, 1 = twierdzenie z pomniejszych faktów przytoczonych w pytaniu. Tablica `claims` ma być posortowana malejąco po tej wartości (5 → 1).
 - `NIE_PODLEGA_WERYFIKACJI` dla opinii i prognoz. `BRAK_WYSTARCZAJACYCH_DOWODOW`, gdy nie ma pewnego źródła.
 - `refusal_to_judge.is_refused: true` i powód, gdy odmawiasz oceny.
 - Pusta lista `claims`, gdy w wiadomości nie ma nic do sprawdzenia - wtedy w `executive_summary` napisz, co użytkownik ma doprecyzować.
