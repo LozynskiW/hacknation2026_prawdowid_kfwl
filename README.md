@@ -103,6 +103,12 @@ Przydatne warianty:
 | Zatrzymanie | `docker compose down` (log sprawdzeń zostaje w wolumenie `prawdowid-data`) |
 | Zatrzymanie i usunięcie danych | `docker compose down -v` |
 
+Gdy budowa kończy się błędem `open ~/.docker/buildx/current: permission denied`, ten plik należy do `root` (zwykle po wcześniejszym `sudo docker ...`). Oddaj go swojemu użytkownikowi:
+
+```bash
+sudo chown "$(whoami)" ~/.docker/buildx/current
+```
+
 Podgląd logu sprawdzeń (`/api/v1/log`) z przeglądarki wymaga `ADMIN_TOKEN` w `.env`, bo dla backendu w kontenerze przeglądarka nie jest „tym samym komputerem”. Bez tokenu można go odczytać z wnętrza kontenera:
 
 ```bash

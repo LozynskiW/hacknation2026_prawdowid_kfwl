@@ -8,6 +8,7 @@ services:
   app:
     build: .
     image: prawdowid:latest
+    pull_policy: build   # obraz zawsze budujemy lokalnie, nigdy nie pobieramy z rejestru
     env_file: .env
     ports:
       - "${PRAWDOWID_PORT:-8000}:8000"   # inny port: PRAWDOWID_PORT=8080 docker compose up
@@ -16,7 +17,11 @@ services:
     restart: unless-stopped
 
   bot:
+    # Ten sam obraz co app. "build" jest potrzebny, inaczej Compose próbuje pobrać "prawdowid"
+    # z Docker Hub (pull access denied), zanim app go zbuduje. Druga budowa trafia w cache.
+    build: .
     image: prawdowid:latest
+    pull_policy: build
     command: ["python", "-m", "prawdowid.discord_bot"]
     env_file: .env
     environment:
