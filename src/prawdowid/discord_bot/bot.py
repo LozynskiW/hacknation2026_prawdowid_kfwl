@@ -115,7 +115,9 @@ class PrawdowidBot(discord.Client):
         full_url = None
         if outcome.report and outcome.report.check_id and self.settings.web_result_url_template:
             full_url = self.settings.web_result_url_template.format(check_id=outcome.report.check_id)
-        return render.render(outcome, full_url)
+        # Pytanie pokazujemy na górze odpowiedzi, jak na stronie WWW.
+        question = text if not url or (text and url in text) else "\n".join(filter(None, [text, url]))
+        return render.render(outcome, full_url, question=question)
 
     def _user_ref(self, user_id: int) -> str:
         """Pseudonim użytkownika: HMAC-SHA256 z solą – surowe ID Discorda nie opuszcza bota."""
