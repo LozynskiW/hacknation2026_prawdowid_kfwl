@@ -53,10 +53,6 @@ AI_MODEL=gemini-3.8-flash
 # AGENT_TIMEOUT=180       # ile sekund czekamy na agenta
 ```
 
-Backend sam uruchamia serwer OpenCode (tylko na 127.0.0.1, z losowym hasłem, z własnym katalogiem `data/opencode/`, bez dostępu do globalnej konfiguracji użytkownika). Agent może tylko wczytywać swoje skille i pobierać strony z listy w `.opencode/opencode.jsonc`; wyszukiwarka, powłoka, odczyt i zapis plików są zablokowane.
-
-Darmowy klucz Gemini ma limit 5 zapytań na minutę, a agent robi kilka zapytań na jedno pytanie. Do prezentacji potrzebny jest płatny poziom klucza albo model z wyższym limitem.
-
 Backend i strona WWW (http://localhost:8000/):
 
 ```bash
