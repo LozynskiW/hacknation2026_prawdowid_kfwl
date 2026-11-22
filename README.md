@@ -20,6 +20,7 @@ src/prawdowid/              kod (pakiet Python "prawdowid")
     sources.py              lista dozwolonych źródeł (z .opencode/opencode.jsonc)
     pii.py                  maskowanie danych osobowych przed modelem i logiem
     checklog.py             log sprawdzeń (SQLite) z retencją i usuwaniem
+    limits.py               walidacja wejścia i limit zapytań
     report.py               JSON agenta -> raport, odrzuca źródła spoza listy
     web_view.py             raport -> widok strony
   web/                      front: szablony Jinja2 (HTMX), CSS, JS (oko)
@@ -55,6 +56,9 @@ AI_MODEL=gemini-3.8-flash
 # AGENT_TIMEOUT=180       # ile sekund czekamy na agenta
 # LOG_RETENTION_DAYS=7    # po ilu dniach wpisy logu sprawdzeń są usuwane
 # ADMIN_TOKEN=...         # dostęp do /api/v1/log spoza tego komputera
+# MAX_TEXT_CHARS=5000     # maks. długość sprawdzanego tekstu
+# RATE_LIMIT_PER_MINUTE=5 # zapytania na osobę na minutę (IP strony / pseudonim z Discorda)
+# RATE_LIMIT_GLOBAL_PER_MINUTE=30  # zapytania łącznie na minutę
 ```
 
 Mistral zamiast Gemini:

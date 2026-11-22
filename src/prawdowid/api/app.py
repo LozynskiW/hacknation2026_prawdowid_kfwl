@@ -25,10 +25,19 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, ConfigDict, Field
 
 from prawdowid.api import checklog
+from prawdowid.api.limits import RateLimiter, rate_limited_message, validate
 from prawdowid.api.opencode import AgentError, model_ref, server
 from prawdowid.api.pii import mask
 from prawdowid.api.report import is_final, to_report
-from prawdowid.api.settings import ADMIN_TOKEN, AGENT_TIMEOUT, AI_API_KEY, AI_MODEL, LOG_RETENTION_DAYS, WEB_DIR
+from prawdowid.api.settings import (
+    ADMIN_TOKEN,
+    AGENT_TIMEOUT,
+    AI_API_KEY,
+    AI_MODEL,
+    LOG_RETENTION_DAYS,
+    MAX_TEXT_CHARS,
+    WEB_DIR,
+)
 from prawdowid.api.sources import allowed_patterns
 from prawdowid.api.web_view import to_template_context
 
@@ -42,6 +51,20 @@ INJECTION_RE = re.compile(
     r"|system\s*prompt|prompt\s*systemow|jeste[śs]\s+teraz|you\s+are\s+now|developer\s+mode|jailbreak",
     re.IGNORECASE,
 )
+
+
+limiter = RateLimiter()
+
+
+def _rate_limit(request: Request, body: "CheckIn") -> dict | None:
+    """FR-53: po przekroczeniu limitu komunikat (status RATE_LIMITED), a nie błąd usługi.
+    Klucz: pseudonim z Discorda, a dla strony adres IP (tylko w pamięci, przez minutę)."""
+    key = f"user:{body.user_ref}" if body.user_ref else f"ip:{request.client.host if request.client else '?'}"
+    retry_after = limiter.hit(key)
+    if retry_after is None:
+        return None
+    log.warning("limit zapytań: kanał=%s, ponowna próba za %s s", body.channel, retry_after)
+    return {"status": "RATE_LIMITED", "statusMessage": rate_limited_message(retry_after), "retryAfter": retry_after}
 
 
 async def _purge_loop() -> None:
@@ -111,7 +134,9 @@ async def run_check(body: CheckIn) -> dict:
     url, pii_url = mask(body.url)
     masked = body.model_copy(update={"text": text, "url": url})  # do modelu i logu trafia tylko to
     stats: dict = {}
-    result = await _ask_agent(masked, stats)
+    problem = validate(body.text, body.url)  # FR-52: nieprawidłowe wejście nie trafia do agenta
+    result = ({"status": "NEEDS_CLARIFICATION", "statusMessage": problem} if problem
+              else await _ask_agent(masked, stats))
     result.setdefault("checkId", f"chk_{uuid.uuid4().hex[:12]}")
     entry = _log_entry(masked, result, stats, sorted(set(pii_text + pii_url)), int((time.monotonic() - started) * 1000))
     try:
@@ -136,7 +161,9 @@ def _log_entry(body: CheckIn, result: dict, stats: dict, pii: list[str], latency
     text = " ".join(filter(None, [body.text, body.url]))
     return {
         "check_id": result["checkId"], "channel": body.channel, "user_ref": body.user_ref,
-        "conversation_id": body.conversation_id, "question": body.text, "url": body.url,
+        "conversation_id": body.conversation_id,
+        "question": body.text[:MAX_TEXT_CHARS + 1] if body.text else None,  # za długi tekst - tylko początek
+        "url": body.url[:2000] if body.url else None,
         "pii_masked": ",".join(pii) or None, "status": status, "verdicts": verdicts,
         "sources": [(e.get("source") or {}).get("url") for e in result.get("evidence") or []],
         "abstained": "INSUFFICIENT_EVIDENCE" in verdicts,
@@ -188,7 +215,7 @@ async def web_check(request: Request, text: str = Form("")):
     # Sam link w polu traktujemy jak link do sprawdzenia, resztę jak tekst.
     is_url = re.fullmatch(r"https?://\S+", text) is not None
     body = CheckIn(channel="WEB", text=None if is_url else text or None, url=text if is_url else None)
-    report = await run_check(body)
+    report = _rate_limit(request, body) or await run_check(body)
     context = to_template_context(report, question=text)
     context["check_id"] = report.get("checkId")
     return templates.TemplateResponse(request, "result.html", context)
@@ -209,7 +236,10 @@ async def health() -> dict:
 
 
 @app.post("/api/v1/check")
-async def check(body: CheckIn):
+async def check(request: Request, body: CheckIn):
+    limited = _rate_limit(request, body)
+    if limited:
+        return JSONResponse(status_code=429, content=limited, headers={"Retry-After": str(limited["retryAfter"])})
     result = await run_check(body)
     if result.get("status") == "TECHNICAL_FAILURE":
         return JSONResponse(status_code=503, content=result)
