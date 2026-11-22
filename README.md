@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/img/prawdowid.webp" alt="Strona Prawdowida: oko i pole „Co chcesz sprawdzić?”" width="480">
+</p>
+
 # PRAWDOWID
 
 Weryfikacja informacji na podstawie wiarygodnych źródeł - HackNation 2026, zadanie MSZ.
