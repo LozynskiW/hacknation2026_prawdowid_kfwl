@@ -75,7 +75,7 @@ async def run_check(body: CheckIn) -> dict:
     if not AI_API_KEY or not AI_MODEL:
         return failure("Brak konfiguracji modelu (AI_API_KEY / AI_MODEL).")
     try:
-        answer = await asyncio.wait_for(server.ask(user_message(body), timeout=AGENT_TIMEOUT), AGENT_TIMEOUT + 30)
+        answer = await asyncio.wait_for(server.ask(user_message(body), timeout=AGENT_TIMEOUT, is_final=lambda a: to_report(a) is not None), AGENT_TIMEOUT + 30)
     except (TimeoutError, httpx.TimeoutException):
         return failure("Sprawdzanie trwało zbyt długo. Spróbuj ponownie.")
     except httpx.HTTPStatusError as e:
