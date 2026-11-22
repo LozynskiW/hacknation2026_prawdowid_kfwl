@@ -1,0 +1,30 @@
+# Prawdowid w dwóch kontenerach: backend (strona WWW, API, agent) i bot Discorda.
+#   docker compose up --build        start obu (strona: http://localhost:8000)
+#   docker compose up --build app    tylko strona i API, bez bota
+#   docker compose logs -f           logi obu
+# Klucze i ustawienia czyta z pliku .env (ten sam co przy uruchomieniu bez Dockera).
+
+services:
+  app:
+    build: .
+    image: prawdowid:latest
+    env_file: .env
+    ports:
+      - "${PRAWDOWID_PORT:-8000}:8000"   # inny port: PRAWDOWID_PORT=8080 docker compose up
+    volumes:
+      - prawdowid-data:/app/data   # log sprawdzeń (SQLite) i stan OpenCode przetrwają restart
+    restart: unless-stopped
+
+  bot:
+    image: prawdowid:latest
+    command: ["python", "-m", "prawdowid.discord_bot"]
+    env_file: .env
+    environment:
+      PRAWDOWID_API_URL: http://app:8000   # bot woła backend po nazwie usługi w sieci Dockera
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  prawdowid-data:

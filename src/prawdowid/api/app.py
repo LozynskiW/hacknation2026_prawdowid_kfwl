@@ -43,6 +43,7 @@ from prawdowid.api.web_view import to_template_context
 
 log = logging.getLogger("prawdowid")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+logging.getLogger("httpx").setLevel(logging.WARNING)  # bez linii przy każdym odpytaniu agenta (co 1 s)
 
 # Typowe zwroty prób obejścia zasad (prompt injection) w treści od użytkownika - tylko do logu (FR-51).
 # Samą obronę robi agent (treść = dane, nie polecenia) i skill walidacji, który takie wiadomości odrzuca.

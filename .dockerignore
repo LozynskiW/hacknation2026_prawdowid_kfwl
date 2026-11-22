@@ -1,0 +1,17 @@
+# Sekrety i dane nigdy nie trafiają do obrazu - .env podaje docker-compose (env_file).
+.env
+.env.*
+data/
+*.db
+
+# Środowiska i narzędzia lokalne
+.git/
+.venv/
+venv/
+.claude/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+node_modules/
+.DS_Store
