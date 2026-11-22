@@ -29,8 +29,7 @@
   {%- endif %}
   {%- if check_id %}
   <form class="result__forget" hx-post="/wynik/{{ check_id }}/usun" hx-target="this" hx-swap="outerHTML">
-    <span>Zapisujemy to sprawdzenie bez danych osobowych na kontrolę jakości, potem je usuwamy.</span>
-    <button type="submit">Usuń teraz</button>
+    Zapisujemy to sprawdzenie bez danych osobowych na kontrolę jakości, potem je usuwamy.<button type="submit">Usuń teraz</button>
   </form>
   {%- endif %}
 </footer>
