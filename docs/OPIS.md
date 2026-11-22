@@ -22,7 +22,7 @@
 
 **Technologia.** Python i FastAPI, strona w HTMX, bot w discord.py, agent w otwartoźródłowym OpenCode z procedurą i skillami opisanymi w plikach projektu. Dostawcę modelu zmienia się jednym ustawieniem: domyślnie Mistral (UE), także Gemini, Anthropic lub OpenAI. Całość uruchamia jedno polecenie `docker compose up`.
 
-**Wyniki testów.** W 15 przypadkach ze scenariuszy jury 13 przeszło. Każdy werdykt rozstrzygający miał źródło (100%), żaden atak nie wymusił potwierdzenia, oba kanały dały ten sam wynik, a awaria i limit nie udawały wyniku. Słabym punktem jest czas: mediana 56 s, a dwa trudne pytania przekroczyły ówczesny limit 3 minut (podnieśliśmy go do 5). Średni koszt to ok. 0,05 USD za sprawdzenie.
+**Wyniki testów.** Wszystkie 15 przypadków ze scenariuszy jury przeszło: każdy werdykt rozstrzygający miał źródło (100%), oba ataki zostały odparte, oba kanały dały ten sam wynik, a awaria i limit nie udawały wyniku. Słabym punktem jest czas: mediana 57 s, a dwa trudne pytania zmieściły się dopiero po podniesieniu limitu do 5 minut. Średni koszt to ok. 0,06 USD za sprawdzenie.
 
 **Ograniczenia i dalsze kroki.** Sprawdzamy tylko tekst i tylko w źródłach z listy, a linków spoza niej nie pobieramy ze względów bezpieczeństwa. Dalej chcemy:
 - dołączyć oceny organizacji fact-checkingowych (Google Fact Check, integracja przygotowana);
