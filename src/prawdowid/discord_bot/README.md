@@ -6,7 +6,7 @@ Adapter kanału: zbiera zgłoszenie z Discorda, wysyła je do API PRAWDOWID, pok
 1. Użytkownik: `/sprawdz tresc:… link:…`, wiadomość prywatna do bota albo oznaczenie bota (`@Prawdowid …`).
 2. Bot w ≤ 3 s odpowiada „Bot myśli…” (`defer`), żeby Discord nie uznał interakcji za nieudaną.
 3. Bot wysyła `POST {PRAWDOWID_API_URL}/api/v1/check` (timeout 60 s). Obsługuje też tryb asynchroniczny: odpowiedź `202 {checkId}` → odpytywanie `GET /api/v1/checks/{checkId}`.
-4. Raport zamieniany jest na embedy: podsumowanie + osobny embed dla każdego twierdzenia (werdykt, wyjaśnienie, siła dowodów, maks. 2 źródła, ostrzeżenia, „czego nie ustalono”) + link do pełnego wyniku w WWW.
+4. Raport zamieniany jest na embedy jak wynik na stronie WWW: pytanie użytkownika, podsumowanie i zliczenie werdyktów (kolor jak oko na stronie), potem osobny embed dla każdego twierdzenia (werdykt z pewnością, krótka odpowiedź, uzasadnienie, maks. 3 źródła z cytatem, siła dowodów, uwagi, „czego nie ustalono”).
 5. Awaria, timeout, limit, zła odpowiedź API → szary embed „Błąd techniczny – to nie jest wynik sprawdzenia”. Nigdy werdykt.
 
 Kontrakt żądania:
