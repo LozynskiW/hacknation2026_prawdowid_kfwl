@@ -66,7 +66,9 @@ class PrawdowidClient:
         if isinstance(report, str):
             return CheckOutcome(answer=report, latency_ms=int((time.monotonic() - started) * 1000))
         latency = int((time.monotonic() - started) * 1000)
-        log.info("check done conversation=%s latency_ms=%s ok=%s", conversation_id, latency, failure is None)
+        # Powód awarii to nasz stały komunikat (bez treści użytkownika) - widać go w logu bota.
+        log.info("check done conversation=%s latency_ms=%s ok=%s%s", conversation_id, latency, failure is None,
+                 f" failure={failure!r}" if failure else "")
         return CheckOutcome(report=report, failure=failure, latency_ms=latency)
 
     async def _check(self, payload: dict) -> tuple[ReportView | None, str | None]:
@@ -111,7 +113,8 @@ class PrawdowidClient:
         try:
             return ReportView.model_validate(body), None
         except ValidationError as exc:
-            log.warning("invalid report from api: %s errors", exc.error_count())
+            # Tylko nazwy pól i typ błędu - bez treści raportu.
+            log.warning("invalid report from api: %s", "; ".join(f"{'.'.join(map(str, e['loc']))}: {e['type']}" for e in exc.errors()))
             return None, MSG_BAD_RESPONSE
 
 

@@ -23,7 +23,9 @@ class BotSettings(BaseSettings):
 
     api_base_url: str = Field(default="http://localhost:8000", alias="PRAWDOWID_API_URL")
     api_key: SecretStr | None = Field(default=None, alias="PRAWDOWID_API_KEY")
-    api_timeout_s: float = Field(default=60.0, alias="PRAWDOWID_API_TIMEOUT")
+    # Dłużej niż backend czeka na agenta (AGENT_TIMEOUT=180 s + 30 s zapasu), żeby bot nie przerywał
+    # sprawdzenia, które backend jeszcze kończy. Token interakcji Discorda jest ważny 15 minut.
+    api_timeout_s: float = Field(default=240.0, alias="PRAWDOWID_API_TIMEOUT")
     api_poll_interval_s: float = Field(default=2.0, alias="PRAWDOWID_API_POLL_INTERVAL")
 
     # Link do pełnego wyniku w WWW, np. https://prawdowid.example/wynik/{check_id}

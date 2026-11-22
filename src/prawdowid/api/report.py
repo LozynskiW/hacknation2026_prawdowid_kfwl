@@ -41,6 +41,22 @@ def _strength(confidence) -> str:
     return "HIGH" if c >= 0.8 else "MEDIUM" if c >= 0.5 else "LOW"
 
 
+def _date(value) -> str | None:
+    """Data publikacji tylko w postaci RRRR-MM-DD (model potrafi wpisać "brak", "listopad 2026" itp.)."""
+    m = re.match(r"\d{4}-\d{2}-\d{2}", str(value or "").strip())
+    return m.group(0) if m else None
+
+
+def _confidence(value) -> float | None:
+    """Pewność jako liczba 0-1 ("0.9", 0.9, "90%", 90 -> 0.9). Inna wartość -> brak pewności."""
+    try:
+        c = float(str(value).strip().rstrip("%").replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+    c = c / 100 if c > 1 else c
+    return c if 0 <= c <= 1 else None
+
+
 def _error_message(error) -> str:
     if isinstance(error, dict):
         return str(error.get("message") or error.get("reason") or error.get("code") or "Błąd skilla.")
@@ -101,12 +117,12 @@ def to_report(answer: str) -> dict | None:
             report["evidence"].append({
                 "evidenceId": eid, "type": "QUOTE", "quote": s.get("exact_quote"),
                 "source": {"title": s.get("title") or host, "publisher": s.get("publisher") or host,
-                           "url": s.get("url"), "publishedAt": s.get("publication_date") or None},
+                           "url": s.get("url"), "publishedAt": _date(s.get("publication_date"))},
             })
 
         explanation = c.get("detailed_justification_pl") or ""
         short_answer = c.get("summary_response_pl") or ""
-        confidence = c.get("confidence_score")
+        confidence = _confidence(c.get("confidence_score"))
         if verdict in ("CONFIRMED", "FALSE", "MISLEADING") and not ids:
             # Werdykt bez źródła = wstrzymanie się. Tekstu modelu nie pokazujemy jako faktu.
             verdict, explanation, short_answer, confidence, downgraded = (

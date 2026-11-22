@@ -6,9 +6,23 @@ Kanoniczna definicja kontraktu: models/report.py.
 """
 
 from datetime import datetime
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, WrapValidator
 from pydantic.alias_generators import to_camel
+
+
+def _or_none(value, handler):
+    """Pole opcjonalne: wartość, której nie da się odczytać (np. data "brak"), zamieniamy na None,
+    zamiast odrzucać cały raport - wtedy użytkownik dostałby błąd techniczny zamiast wyniku."""
+    try:
+        return handler(value)
+    except ValueError:
+        return None
+
+
+OptDatetime = Annotated[datetime | None, WrapValidator(_or_none)]
+OptFloat = Annotated[float | None, WrapValidator(_or_none)]
 
 
 class _View(BaseModel):
@@ -20,8 +34,8 @@ class SourceView(_View):
     publisher: str
     url: str
     source_type: str | None = None
-    published_at: datetime | None = None
-    fetched_at: datetime | None = None
+    published_at: OptDatetime = None
+    fetched_at: OptDatetime = None
 
 
 class DataPointView(_View):
@@ -29,12 +43,12 @@ class DataPointView(_View):
     value: float
     unit: str
     location: str
-    observed_at: datetime | None = None
+    observed_at: OptDatetime = None
 
 
 class FactCheckView(_View):
     textual_rating: str
-    review_date: datetime | None = None
+    review_date: OptDatetime = None
 
 
 class EvidenceView(_View):
@@ -75,7 +89,7 @@ class ClaimView(_View):
     outcome: OutcomeView
     strength: StrengthView | None = None
     short_answer: str = ""          # krótka odpowiedź w jednym zdaniu (jak na stronie)
-    confidence: float | None = None  # pewność 0-1
+    confidence: OptFloat = None  # pewność 0-1
     explanation: str = ""
     evidence_ids: list[str] = []
     warnings: list[WarningView] = []
