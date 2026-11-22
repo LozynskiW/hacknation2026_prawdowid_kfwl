@@ -231,6 +231,41 @@ body {
   outline-offset: 2px;
 }
 
+/* W trakcie sprawdzania (klasa ask--busy ze skryptu w index.html): pole wyszarzone,
+   a zamiast strzalki kreci sie kolko ladowania. */
+.ask--busy .ask__bar {
+  border-color: var(--panel-edge);
+  background: #171513;
+}
+
+.ask--busy .ask__input {
+  color: #7d766a;
+  cursor: progress;
+}
+
+.ask__spinner {
+  display: none;
+  width: 22px;
+  height: 22px;
+  border: 3px solid rgba(255, 255, 255, .3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+.ask--busy .ask__send { opacity: 1; cursor: progress; }
+.ask--busy .ask__send svg { display: none; }
+.ask--busy .ask__spinner { display: block; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Przy ograniczeniu animacji kolko nadal sie kreci (to wskaznik pracy), ale wolniej. */
+@media (prefers-reduced-motion: reduce) {
+  .ask__spinner { animation-duration: 2.4s; }
+}
+
 /* Komunikat "Sprawdzam..." widoczny tylko w trakcie zapytania HTMX. */
 .ask__busy {
   display: none;

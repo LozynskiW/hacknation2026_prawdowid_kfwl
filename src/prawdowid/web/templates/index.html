@@ -74,6 +74,7 @@
         <textarea id="ask-text" name="text" class="ask__input" rows="1" maxlength="5000" required
                   placeholder="Co chcesz sprawdzić?"></textarea>
         <button type="submit" class="ask__send" aria-label="Sprawdź" disabled>
+          <span class="ask__spinner" aria-hidden="true"></span>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         </button>
       </div>
@@ -114,7 +115,7 @@
       input.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
           e.preventDefault();
-          if (input.value.trim()) form.requestSubmit();
+          if (input.value.trim() && !input.readOnly) form.requestSubmit();
         }
       });
 
@@ -163,6 +164,17 @@
 
       form.addEventListener('htmx:beforeRequest', startThinking);
       form.addEventListener('htmx:afterRequest', function () { clearInterval(timer); });
+
+      // W trakcie sprawdzania pole jest wyszarzone i zablokowane (readonly, nie disabled -
+      // wartosc ma dalej trafic do zapytania), a przycisk wysylania kreci sie jak ladowanie (CSS).
+      form.addEventListener('htmx:beforeRequest', function () {
+        input.readOnly = true;
+        form.classList.add('ask--busy');
+      });
+      form.addEventListener('htmx:afterRequest', function () {
+        input.readOnly = false;
+        form.classList.remove('ask--busy');
+      });
 
       // Jedno pytanie - jedna odpowiedz: nowe pytanie czysci poprzednia odpowiedz.
       form.addEventListener('htmx:beforeRequest', function () { answer.innerHTML = ''; });
