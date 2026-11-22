@@ -28,6 +28,6 @@ AI_API_KEY = os.getenv("AI_API_KEY", "")
 AI_MODEL = os.getenv("AI_MODEL", "")
 OPENCODE_BIN = os.getenv("OPENCODE_BIN", "opencode2")
 AGENT_TIMEOUT = float(os.getenv("AGENT_TIMEOUT", "180"))
-AGENT_DIR = _path("AGENT_DIR", "agent")
+AGENT_DIR = ROOT / ".opencode"  # konfiguracja projektu OpenCode: agent, skille, uprawnienia
 OPENCODE_DATA_DIR = _path("OPENCODE_DATA_DIR", "data/opencode")
 WEB_DIR = PACKAGE / "web"

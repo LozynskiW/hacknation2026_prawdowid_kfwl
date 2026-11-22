@@ -1,7 +1,8 @@
 """Agent Prawdowid w OpenCode V2: backend uruchamia serwer OpenCode i wysyła mu pytania.
 
 Serwer działa jako proces potomny backendu, tylko na 127.0.0.1, z losowym hasłem.
-Konfiguracja, agent i skille: agent/ (OPENCODE_CONFIG_DIR). Uprawnienia agenta: agent/opencode.jsonc.
+Serwer działa w katalogu głównym repozytorium, więc czyta konfigurację projektu z .opencode/:
+agenta (agent/prawdowid.md), skille (skills/) i uprawnienia (opencode.jsonc).
 
 Izolacja: serwer dostaje własny HOME i katalogi XDG w data/opencode/ oraz wyłączoną zgodność
 z Claude Code, więc nie czyta globalnych instrukcji ani skilli użytkownika maszyny (~/.claude itd.).
@@ -18,7 +19,6 @@ from pathlib import Path
 import httpx
 
 from prawdowid.api.settings import (
-    AGENT_DIR,
     AI_API_KEY,
     AI_MODEL,
     AI_PROVIDER,
@@ -74,7 +74,6 @@ class OpenCodeServer:
             "XDG_DATA_HOME": str(OPENCODE_DATA_DIR / "data"),
             "XDG_STATE_HOME": str(OPENCODE_DATA_DIR / "state"),
             "XDG_CACHE_HOME": str(OPENCODE_DATA_DIR / "cache"),
-            "OPENCODE_CONFIG_DIR": str(AGENT_DIR),
             "OPENCODE_SERVER_PASSWORD": self.password,
             "OPENCODE_DISABLE_CLAUDE_CODE": "1",
             "OPENCODE_DISABLE_AUTOUPDATE": "1",

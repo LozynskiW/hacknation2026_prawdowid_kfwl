@@ -6,17 +6,18 @@ Użytkownik wpisuje informację albo link, a agent sprawdza twierdzenia w źród
 ## Układ repozytorium
 
 ```
-agent/                      agent weryfikujący w OpenCode V2 (OPENCODE_CONFIG_DIR)
+.opencode/                  agent weryfikujący w OpenCode V2 (konfiguracja projektu)
   opencode.jsonc            uprawnienia agenta: tylko skille i pobieranie stron z listy
-  agents/prawdowid.md       agent: zasady, procedura (kroki 0-5) i format odpowiedzi
-  skills/<nazwa>/SKILL.md   skille agenta (walidacja wejścia, twierdzenia, dowody, werdykt, źródła)
+  agent/prawdowid.md        agent: zasady i procedura (kroki 0-5)
+  skills/<nazwa>/SKILL.md   skille agenta (walidacja wejścia, twierdzenia, dowody, werdykt,
+                            źródła, format odpowiedzi)
 
 src/prawdowid/              kod (pakiet Python "prawdowid")
   api/                      backend FastAPI: strona WWW i API dla bota
     app.py                  trasy: /, /wynik, /api/v1/check, /health
     settings.py             ustawienia z .env
     opencode.py             uruchamia serwer OpenCode i wysyła mu pytania
-    sources.py              lista dozwolonych źródeł (z agent/opencode.jsonc)
+    sources.py              lista dozwolonych źródeł (z .opencode/opencode.jsonc)
     report.py               JSON agenta -> raport, odrzuca źródła spoza listy
     web_view.py             raport -> widok strony
   web/                      front: szablony Jinja2 (HTMX), CSS, JS (oko)
@@ -52,7 +53,7 @@ AI_MODEL=gemini-3.8-flash
 # AGENT_TIMEOUT=180       # ile sekund czekamy na agenta
 ```
 
-Backend sam uruchamia serwer OpenCode (tylko na 127.0.0.1, z losowym hasłem, z własnym katalogiem `data/opencode/`, bez dostępu do globalnej konfiguracji użytkownika). Agent może tylko wczytywać swoje skille i pobierać strony z listy w `agent/opencode.jsonc`; wyszukiwarka, powłoka, odczyt i zapis plików są zablokowane.
+Backend sam uruchamia serwer OpenCode (tylko na 127.0.0.1, z losowym hasłem, z własnym katalogiem `data/opencode/`, bez dostępu do globalnej konfiguracji użytkownika). Agent może tylko wczytywać swoje skille i pobierać strony z listy w `.opencode/opencode.jsonc`; wyszukiwarka, powłoka, odczyt i zapis plików są zablokowane.
 
 Darmowy klucz Gemini ma limit 5 zapytań na minutę, a agent robi kilka zapytań na jedno pytanie. Do prezentacji potrzebny jest płatny poziom klucza albo model z wyższym limitem.
 

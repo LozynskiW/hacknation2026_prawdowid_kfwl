@@ -1,6 +1,6 @@
 """Lista dozwolonych źródeł - jedna dla agenta i backendu.
 
-Źródłem prawdy są reguły webfetch w agent/opencode.jsonc: OpenCode pozwala agentowi pobierać
+Źródłem prawdy są reguły webfetch w .opencode/opencode.jsonc: OpenCode pozwala agentowi pobierać
 tylko te adresy, a backend tymi samymi wzorcami sprawdza źródła w raporcie.
 """
 

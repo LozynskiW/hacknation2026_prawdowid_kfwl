@@ -1,6 +1,5 @@
-// Konfiguracja OpenCode V2 dla agenta Prawdowid.
-// Serwer uruchamiany z OPENCODE_CONFIG_DIR=agent, więc OpenCode czyta stąd ten plik,
-// agenta z agents/prawdowid.md i skille z skills/<nazwa>/SKILL.md.
+// Konfiguracja OpenCode V2 dla agenta Prawdowid (konfiguracja projektu: .opencode/).
+// OpenCode czyta stąd ten plik, agenta z agent/prawdowid.md i skille z skills/<nazwa>/SKILL.md.
 //
 // Uprawnienia: wszystko zablokowane, dozwolone tylko skille agenta i pobieranie stron z listy.
 // Lista webfetch to jedyna lista dozwolonych źródeł - backend (src/prawdowid/api/sources.py)
@@ -9,8 +8,7 @@
 // do "https://obca-strona.com/x.gov.pl/", bo * obejmuje także znak "/".
 {
   "$schema": "https://opencode.ai/config.json",
-  // Ścieżka względem katalogu, w którym działa serwer (katalog główny repozytorium).
-  "skills": ["./agent/skills"],
+  "default_agent": "prawdowid",
   // Tytuły sesji są nam niepotrzebne, a każdy to dodatkowe zapytanie do modelu.
   "agents": { "title": { "disabled": true } },
   "permissions": [
@@ -22,6 +20,7 @@
     { "action": "skill", "resource": "evidence-retrieval", "effect": "allow" },
     { "action": "skill", "resource": "evidence-evaluation", "effect": "allow" },
     { "action": "skill", "resource": "verdict-formulation", "effect": "allow" },
+    { "action": "skill", "resource": "response-format", "effect": "allow" },
 
     { "action": "webfetch", "resource": "https://www.gov.pl/*", "effect": "allow" },
     { "action": "webfetch", "resource": "https://odyseusz.gov.pl/*", "effect": "allow" },
