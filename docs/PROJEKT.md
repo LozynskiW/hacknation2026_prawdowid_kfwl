@@ -27,7 +27,7 @@ Każde źródło: tytuł, wydawca, data publikacji, data pobrania, link, wykorzy
 1. **Whitelista urzędowa (40 URL, 18 hostów)** – bezpieczeństwo i ochrona ludności: RCB, MSWiA, gov.pl/ostrzeżenia, IMGW (meteo, hydro, Bałtyk), PAA (promieniowanie), GIOŚ (powietrze), GIS, GDDKiA, ULC, UTK, Portal Pasażera, SOK, SAR, urzędy morskie, Wody Polskie, CERT, Policja, PSP, MON, MSZ (podróże), Odyseusz, Premier, Ministerstwo Infrastruktury.
 2. **Google Fact Check Tools API** – oceny fact-checkerów (ClaimReview).
 
-Lista dozwolonych stron: reguły `webfetch` w `.opencode/opencode.jsonc` (szczegóły: `docs/ZRODLA.md`), katalog z licencjami: `config/sources.yaml`.
+Lista dozwolonych stron: reguły `webfetch` w `.opencode/opencode.jsonc`; licencje i zasady kwalifikacji: `docs/ZRODLA.md`.
 
 ## Twarde zasady
 - Żadna teza nie jest podana jako ustalenie bez dowodu ze źródła.

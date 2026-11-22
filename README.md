@@ -3,6 +3,40 @@
 Weryfikacja informacji na podstawie wiarygodnych źródeł - HackNation 2026, zadanie MSZ.
 Użytkownik wpisuje informację albo link, a agent sprawdza twierdzenia w źródłach z listy dozwolonych i zwraca werdykt ze źródłami.
 
+## Dla jury: szybki start
+
+Potrzebny jest Docker z Compose (np. Docker Desktop) i własny klucz do modelu językowego, np. Mistral (https://console.mistral.ai) albo Gemini (https://aistudio.google.com/apikey). Naszych kluczy nie ma w repozytorium.
+
+1. Skopiuj wzór ustawień i wpisz w nim swój klucz (`AI_API_KEY`), a dla bota także `DISCORD_TOKEN` i `BOT_USER_SALT`:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Uruchom stronę i API (bez bota wystarczy sam klucz modelu):
+
+   ```bash
+   docker compose up --build app
+   ```
+
+   albo stronę, API i bota Discorda:
+
+   ```bash
+   docker compose up --build
+   ```
+
+3. Otwórz http://localhost:8000 i wpisz informację do sprawdzenia, np. „Czy prezydentem Polski jest Karol Nawrocki?”.
+
+Specyfikacja API: http://localhost:8000/docs (również [docs/openapi.json](docs/openapi.json)).
+
+| Dokument | Zawartość |
+|---|---|
+| [docs/ARCHITEKTURA.md](docs/ARCHITEKTURA.md) | architektura, przepływ danych, modele i dostawcy, ograniczenia |
+| [docs/ZRODLA.md](docs/ZRODLA.md) | źródła, licencje, zasady kwalifikacji i aktualizacji |
+| [docs/TESTY.md](docs/TESTY.md) | wyniki testów (scenariusze A-J) i jak je odtworzyć |
+| [docs/RYZYKA.md](docs/RYZYKA.md) | najważniejsze ryzyka i sposoby ich ograniczania |
+| [docs/OPIS.md](docs/OPIS.md) | opis rozwiązania |
+
 ## Układ repozytorium
 
 ```
@@ -26,10 +60,11 @@ src/prawdowid/              kod (pakiet Python "prawdowid")
   web/                      front: szablony Jinja2 (HTMX), CSS, JS (oko)
   discord_bot/              bot Discorda (woła /api/v1/check)
 
-config/sources.yaml         katalog źródeł korpusu z licencjami (audyt)
-scripts/build_corpus.py     budowa korpusu demonstracyjnego
-docs/                       opis projektu, wymagania, źródła
-data/                       pliki generowane (poza repozytorium)
+tests/scenarios/            pytania testowe (scenariusze A-J) i skrypt, który je uruchamia
+docs/                       opis, architektura, źródła, testy, ryzyka, OpenAPI
+Dockerfile, docker-compose.yml   obraz i uruchomienie jednym poleceniem
+.env.example                wzór ustawień (bez kluczy)
+data/                       pliki generowane: log sprawdzeń, stan OpenCode (poza repozytorium)
 ```
 
 ## Uruchomienie
@@ -46,14 +81,14 @@ To instaluje też pakiet z `src/` w trybie edytowalnym, więc zmiany w kodzie dz
 npm install -g @opencode/cli
 ```
 
-W `.env` (nie trafia do repozytorium):
+W `.env` (nie trafia do repozytorium; wzór z opisami: [.env.example](.env.example)):
 
 ```
 AI_PROVIDER=gemini        # gemini | mistral | anthropic | openai
 AI_API_KEY=...            # klucz dostawcy, trafia tylko do serwera OpenCode
 AI_MODEL=gemini-3.8-flash
 # OPENCODE_BIN=opencode2  # gdy OpenCode jest pod inną ścieżką
-# AGENT_TIMEOUT=180       # ile sekund czekamy na agenta
+# AGENT_TIMEOUT=300       # ile sekund czekamy na agenta
 # LOG_RETENTION_DAYS=7    # po ilu dniach wpisy logu sprawdzeń są usuwane
 # ADMIN_TOKEN=...         # dostęp do /api/v1/log spoza tego komputera
 # MAX_TEXT_CHARS=5000     # maks. długość sprawdzanego tekstu
@@ -137,6 +172,11 @@ Konsola backendu pokazuje jedną linię na każde sprawdzenie, bez treści pytan
 
 ## Dokumenty
 
-- [docs/PROJEKT.md](docs/PROJEKT.md) - opis projektu
-- [docs/WYMAGANIA.md](docs/WYMAGANIA.md) - wymagania
+- [docs/OPIS.md](docs/OPIS.md) - opis rozwiązania
+- [docs/ARCHITEKTURA.md](docs/ARCHITEKTURA.md) - architektura, przepływ danych, modele, dostawcy, ograniczenia
 - [docs/ZRODLA.md](docs/ZRODLA.md) - źródła, licencje i zasady ich kwalifikacji
+- [docs/TESTY.md](docs/TESTY.md) - wyniki testów i jak je odtworzyć
+- [docs/RYZYKA.md](docs/RYZYKA.md) - ryzyka i sposoby ich ograniczania
+- [docs/PROJEKT.md](docs/PROJEKT.md) - założenia projektu
+- [docs/WYMAGANIA.md](docs/WYMAGANIA.md) - wymagania z treści zadania
+- [docs/openapi.json](docs/openapi.json) - specyfikacja API (OpenAPI)
