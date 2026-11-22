@@ -18,6 +18,8 @@ src/prawdowid/              kod (pakiet Python "prawdowid")
     settings.py             ustawienia z .env
     opencode.py             uruchamia serwer OpenCode i wysyła mu pytania
     sources.py              lista dozwolonych źródeł (z .opencode/opencode.jsonc)
+    pii.py                  maskowanie danych osobowych przed modelem i logiem
+    checklog.py             log sprawdzeń (SQLite) z retencją i usuwaniem
     report.py               JSON agenta -> raport, odrzuca źródła spoza listy
     web_view.py             raport -> widok strony
   web/                      front: szablony Jinja2 (HTMX), CSS, JS (oko)
@@ -51,6 +53,8 @@ AI_API_KEY=...            # klucz dostawcy, trafia tylko do serwera OpenCode
 AI_MODEL=gemini-3.8-flash
 # OPENCODE_BIN=opencode2  # gdy OpenCode jest pod inną ścieżką
 # AGENT_TIMEOUT=180       # ile sekund czekamy na agenta
+# LOG_RETENTION_DAYS=7    # po ilu dniach wpisy logu sprawdzeń są usuwane
+# ADMIN_TOKEN=...         # dostęp do /api/v1/log spoza tego komputera
 ```
 
 Mistral zamiast Gemini:
@@ -72,6 +76,26 @@ Bot Discorda (opis konfiguracji: [src/prawdowid/discord_bot/README.md](src/prawd
 ```bash
 python -m prawdowid.discord_bot
 ```
+
+## Log sprawdzeń i prywatność
+
+Każde sprawdzenie (strona i Discord) trafia do `data/prawdowid.db` (SQLite, poza repozytorium). Zapisujemy:
+- kanał, czas i pytanie po zamaskowaniu danych osobowych (PESEL, telefon, e-mail, numery kont, kart i dokumentów);
+- wynik, werdykty i źródła;
+- model, czas odpowiedzi, koszt i tokeny z OpenCode;
+- pobrania stron i ich błędy, wstrzymanie się oraz próby prompt injection.
+
+Strona WWW nie identyfikuje użytkownika. Discord przekazuje tylko pseudonim (HMAC z solą).
+
+Dane osobowe maskujemy, zanim tekst trafi do modelu. Wpisy starsze niż `LOG_RETENTION_DAYS` (domyślnie 7 dni) usuwamy automatycznie.
+
+| Co | Jak |
+|---|---|
+| Podgląd logu i podsumowania (mediana czasu, koszt, wstrzymania, ataki) | `GET /api/v1/log` - z tego komputera albo z `Authorization: Bearer <ADMIN_TOKEN>` |
+| Jeden wpis | `GET /api/v1/log/{checkId}` |
+| Usunięcie sprawdzenia | przycisk „Usuń teraz” pod wynikiem, `/usun <checkId>` w bocie albo `DELETE /api/v1/checks/{checkId}` |
+
+Konsola backendu pokazuje jedną linię na każde sprawdzenie, bez treści pytania.
 
 ## Dokumenty
 

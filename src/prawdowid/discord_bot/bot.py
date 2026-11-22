@@ -71,6 +71,21 @@ class PrawdowidBot(discord.Client):
             )
             await interaction.followup.send(embeds=embeds, ephemeral=prywatnie)
 
+        @self.tree.command(name="usun", description="Usuń swoje sprawdzenie z logu Prawdowida")
+        @app_commands.describe(identyfikator="Identyfikator ze stopki wyniku, np. chk_1a2b3c4d5e6f")
+        async def usun(interaction: discord.Interaction, identyfikator: str) -> None:
+            check_id = identyfikator.strip()
+            if not re.fullmatch(r"chk_[0-9a-f]{12}", check_id):
+                await interaction.response.send_message(
+                    embed=render.input_error_embed("To nie wygląda na identyfikator sprawdzenia (np. `chk_1a2b3c4d5e6f`)."),
+                    ephemeral=True)
+                return
+            deleted = await self.api.delete(check_id)
+            text = {True: "Usunięto. Po tym sprawdzeniu nie ma śladu w logu.",
+                    False: "Nie ma takiego sprawdzenia - mogło zostać już usunięte.",
+                    None: "Nie udało się teraz usunąć. Spróbuj ponownie za chwilę."}[deleted]
+            await interaction.response.send_message(text, ephemeral=True)
+
         @self.tree.command(name="pomoc", description="Jak działa Prawdowid")
         async def pomoc(interaction: discord.Interaction) -> None:
             await interaction.response.send_message(embed=render.help_embed(), ephemeral=True)

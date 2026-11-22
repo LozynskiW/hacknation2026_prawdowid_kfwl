@@ -71,6 +71,14 @@ class PrawdowidClient:
                  f" failure={failure!r}" if failure else "")
         return CheckOutcome(report=report, failure=failure, latency_ms=latency)
 
+    async def delete(self, check_id: str) -> bool | None:
+        """Usuwa sprawdzenie z logu backendu. True - usunięto, False - nie było go, None - błąd techniczny."""
+        try:
+            resp = await self._http.delete(f"/api/v1/checks/{check_id}")
+        except httpx.HTTPError:
+            return None
+        return bool(_safe_json(resp).get("deleted")) if resp.status_code == 200 else None
+
     async def _check(self, payload: dict) -> tuple[ReportView | None, str | None]:
         try:
             resp = await self._http.post("/api/v1/check", json=payload)
