@@ -99,7 +99,7 @@ Zwróć wynik sformatowany wyłącznie jako prawidłowy obiekt JSON bez dodatkow
       "raw_text_fragment": "W lipcu 2024 roku Ministerstwo Finansów podało, że inflacja wyniosła 4.2%",
       "extracted_claim": "W lipcu 2024 roku Ministerstwo Finansów opublikowało informację, że wskaźnik inflacji wynosił 4,2%.",
       "category": "STATYSTYCZNE",
-      "is_verifiable": true,
+      "is_verifiable": "TRUE",
       "verifiability_reasoning": "Można zweryfikować w oficjalnych komunikatach Ministerstwa Finansów oraz GUS dla lipca 2024 r.",
       "entities_involved": ["Ministerstwo Finansów"],
       "temporal_context": "lipiec 2024",

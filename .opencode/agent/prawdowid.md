@@ -69,7 +69,7 @@ Agent `prawdowid` wykonuje zadania według ścisłej sekwencji kroków:
 2. Uruchom skill **`input-formatter-validator`**:
    - Dokonaj walidacji treści polecenia użytkownika
    - Wynik walidacji (`ZWALIDOWANE`) zachowaj do dalszych kroków i przejdź do Kroku 1. Nie zwracaj go użytkownikowi i nie zapisuj do pliku.
-   - Jeśli wiadomość zostanie odrzucona (`ODRZUCONE`), zwróć wynik walidacji jako odpowiedź i zakończ.
+3. Jeśli wiadomość zostanie odrzucona (`ODRZUCONE`), przejdź natychmiast do kroku 5.
 
 ---
 
@@ -83,29 +83,25 @@ Agent `prawdowid` wykonuje zadania według ścisłej sekwencji kroków:
 
 ---
 
-### Krok 2: Pętla Weryfikacji Cząstkowej (dla każdego twierdzenia w `claims_list`)
+## Krok 2 — Zbieranie dowodów (RÓWNOLEGLE, przez subagentów)
 
-Dla każdego pojedynczego twierdzenia wykonaj w pętli 3 zintegrowane kroki:
-
-#### Krok 2a: Poszukiwanie Dowodów (`evidence-retrieval`)
-- Wyszukaj dowody dla przedstawionych twierdzeń - skill **`evidence-retrieval`**.
-
-#### Krok 2b: Ocena Siły Dowodów i Analiza Kontekstu (`evidence-evaluation`)
-- Uruchom skill **`evidence-evaluation`**.
-- Dokonaj hierarchizacji źródeł (Tier 1 do Tier 4) i klasteryzacji niezależnych potwierdzeń.
-- Zweryfikuj, czy informacja nie została użyta w fałszywym kontekście (czasowym, geograficznym, sytuacyjnym).
-- Wylicz wskaźnik siły dowodowej `Evidence Strength Score` (0.00 – 1.00) oraz wyizoluj ewentualne sprzeczności między źródłami.
-
-#### Krok 2c: Utworzenie Raportu Cząstkowego (`verdict-formulation`)
-- Uruchom skill **`verdict-formulation`**.
-- Przypisz twierdzeniu jeden z 5 werdyktów: `POTWIERDZONE`, `FAŁSZYWE`, `WPROWADZAJĄCE_W_BŁĄD`, `BRAK_WYSTARCZAJĄCYCH_DOWODÓW` lub `NIE_PODLEGA_WERYFIKACJI`.
-- Sformułuj zwięzłe uzasadnienie w prostym języku polskim oraz dołącz bezpośrednie odnośniki do źródeł (tytuł, wydawca, data, URL, dosłowny cytat).
-- Zachowaj cząstkowy raport weryfikacyjny do kroku 3.
+1. Dla KAŻDEGO twierdzenia atomowego (`TWIERDZENIE-001`, `TWIERDZENIE-002`, ...)
+   wywołaj **jednocześnie** subagenta `evidence-gatherer` — jedno wywołanie Task
+   na jedno twierdzenie, wszystkie wywołania w jednym bloku (równolegle).
+   Każdy subagent wykonuje 2a + 2b + 2c tylko dla swojego twierdzenia.
+   (Limit: maks. 5 twierdzeń = maks. 5 subagentów naraz.)
+2. Poczekaj na zakończenie wszystkich subagentów i zbierz ich wyniki JSON.
+3. **Deduplikacja**: usuń powtórzone dowody po `source_url`
+   (dla 2a także po `verification_url`). Przy kolizji zachowaj egzemplarz
+   z wyższym `relevance_score` / wyższym tierem źródła i dopisz do niego
+   pozostałe `claim_id`, których dotyczy ten sam dowód.
+4. **Raport zbiorczy**: połącz wszystkie `evidence_results` w jedną tablicę
+   pogrupowaną po `claim_id`.
 
 ---
 
 ### Krok 3: Utworzenie Raportu Zbiorczego
-1. Zgromadź wszystkie cząstkowe raporty wygenerowane w Kroku 2.
+1. Weź raport wygenerowany w Kroku 2.
 2. Zsyntetyzuj ustalenia w jeden spójny, ustrukturyzowany raport zbiorczy.
 3. Usuń z wyników wszelkie dane wrażliwe dla systemu jak adresy lub nazwy plików konfiguracyjnych.
 3. Utwórz podsumowanie wykonawcze (*Executive Summary*), zawierające:

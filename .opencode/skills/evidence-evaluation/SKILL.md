@@ -34,7 +34,7 @@ Przypisuj wagę dowodową źródłom na podstawie ich kategorii:
 Zbadaj czy twierdzenie nie zawiera tzw. *fałszywego kontekstu*:
 * **Kontekst Czasowy**: Prawdziwe zdarzenie z przeszłości przedstawione jako wydarzenie bieżące (np. nagranie z 2018 r. opisane jako incydent zczorajszy).
 * **Kontekst Geograficzny/Przestrzenny**: Prawdziwy fakt przypisany innemu miejscu lub krajowi.
-* **Kontekst Приczynowo-Skutkowy**: Prawdziwa informacja połączona z fałszywą przyczyną lub intencją (np. ujęcia z planu filmowego opisywane jako rzeczywista katastrofa).
+* **Kontekst Przyczynowo-Skutkowy**: Prawdziwa informacja połączona z fałszywą przyczyną lub intencją (np. ujęcia z planu filmowego opisywane jako rzeczywista katastrofa).
 
 ### 4. Wykrywanie Sprzeczności (Conflict Detection)
 * Jeśli źródła zgłaszają wykluczające się liczby, daty lub przebieg zdarzeń, przeanalizuj potencjalne przyczyny sprzeczności (np. różne metody pomiarowe, aktualizacja danych, błąd medialny, celowa dezinformacja).
