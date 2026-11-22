@@ -46,11 +46,19 @@ npm install -g @opencode/cli
 W `.env` (nie trafia do repozytorium):
 
 ```
-AI_PROVIDER=gemini        # gemini | anthropic | openai
+AI_PROVIDER=gemini        # gemini | mistral | anthropic | openai
 AI_API_KEY=...            # klucz dostawcy, trafia tylko do serwera OpenCode
 AI_MODEL=gemini-3.8-flash
 # OPENCODE_BIN=opencode2  # gdy OpenCode jest pod inną ścieżką
 # AGENT_TIMEOUT=180       # ile sekund czekamy na agenta
+```
+
+Mistral zamiast Gemini:
+
+```
+AI_PROVIDER=mistral
+AI_API_KEY=...            # klucz z console.mistral.ai
+AI_MODEL=mistral-medium-latest
 ```
 
 Backend i strona WWW (http://localhost:8000/):

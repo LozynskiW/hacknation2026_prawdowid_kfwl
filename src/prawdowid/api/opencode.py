@@ -35,6 +35,7 @@ PROVIDERS = {
     "gemini": ("google", "GEMINI_API_KEY"),
     "anthropic": ("anthropic", "ANTHROPIC_API_KEY"),
     "openai": ("openai", "OPENAI_API_KEY"),
+    "mistral": ("mistral", "MISTRAL_API_KEY"),
 }
 
 
@@ -80,7 +81,9 @@ class OpenCodeServer:
             "OPENCODE_DISABLE_AUTOUPDATE": "1",
             "OPENCODE_DISABLE_FREE_MODELS": "1",
         }
-        key_var = PROVIDERS.get(AI_PROVIDER, (None, None))[1]
+        # Zmienna z kluczem wg dostawcy modelu (AI_MODEL może mieć prefiks, np. mistral/mistral-large-latest).
+        provider = model_ref()["providerID"]
+        key_var = next((var for pid, var in PROVIDERS.values() if pid == provider), None)
         if key_var and AI_API_KEY:
             env[key_var] = AI_API_KEY
         for path in (home, *(Path(env[k]) for k in env if k.startswith("XDG_"))):

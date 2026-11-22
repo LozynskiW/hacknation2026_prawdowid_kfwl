@@ -86,6 +86,8 @@ async def run_check(body: CheckIn) -> dict:
         log.warning("OpenCode: %s", str(e)[:500])
         if e.kind == "provider.quota":
             return failure("Wyczerpał się limit zapytań do modelu. Spróbuj ponownie później.")
+        if e.kind == "provider.auth":
+            return failure("Dostawca modelu odrzucił klucz API. Sprawdź AI_API_KEY i AI_PROVIDER w .env.")
         return failure("Nie udało się wykonać sprawdzenia. Spróbuj ponownie.")
     except (httpx.HTTPError, KeyError, OSError) as e:
         return failure(f"Nie udało się wykonać sprawdzenia ({type(e).__name__}).")

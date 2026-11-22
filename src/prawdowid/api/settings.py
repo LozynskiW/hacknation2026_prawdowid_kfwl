@@ -1,8 +1,9 @@
 """Ustawienia backendu - wyłącznie ze zmiennych środowiskowych / pliku .env.
 
-  AI_PROVIDER=gemini             # gemini | anthropic | openai
+  AI_PROVIDER=gemini             # gemini | mistral | anthropic | openai
   AI_API_KEY=...                 # klucz dostawcy, przekazywany tylko serwerowi OpenCode
   AI_MODEL=gemini-3.8-flash      # albo pełny identyfikator OpenCode, np. google/gemini-3.8-flash
+                                 # Mistral: AI_PROVIDER=mistral, AI_MODEL=mistral-medium-latest
   OPENCODE_BIN=opencode2         # polecenie OpenCode V2 (pakiet npm @opencode/cli)
   AGENT_TIMEOUT=180              # ile sekund czekamy na odpowiedź agenta
 """
