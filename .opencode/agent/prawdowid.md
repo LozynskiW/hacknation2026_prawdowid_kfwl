@@ -108,6 +108,7 @@ Agent `prawdowid` wykonuje zadania według ścisłej sekwencji kroków:
    - Ogólny bilans wiarygodności materiału (liczba twierdzeń potwierdzonych, fałszywych, wprowadzających w błąd itd.).
    - Główne wnioski oraz kluczowe ostrzeżenia o manipulacjach kontekstowych lub nieaktualnych stanie prawnym/faktycznym.
    - Zbiorczy wykaz użytych źródeł i odnośników.
+5. **Sortowanie twierdzeń**: posortuj tablicę `claims` malejąco według `relevance_to_question` (5 → 1). Przy równej wartości zachowaj kolejność wystąpienia w `claims_list` (Krok 1).
 
 Do utworzenia raportu zbiorczego użyj struktury ze skilla `response-format`.
 
@@ -128,7 +129,8 @@ Przed zaprezentowaniem wyników wykonaj obligatoryjny audyt jakościowy:
 ---
 
 ### Krok 5: Publikacja Wyników
-1. Zwróć finalny raport jako jeden obiekt JSON w formacie ze skilla `response-format`, bez żadnego tekstu przed ani po nim. Nic w nim nie zmieniaj.
+1. Sprawdź, czy tablica `claims` w finalnym raporcie jest posortowana malejąco po `relevance_to_question` (5 → 1) — jeśli nie, posortuj ją przed zwróceniem.
+2. Zwróć finalny raport jako jeden obiekt JSON w formacie ze skilla `response-format`, bez żadnego tekstu przed ani po nim. Nic w nim nie zmieniaj.
 
 ---
 
