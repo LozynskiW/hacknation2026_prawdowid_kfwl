@@ -74,6 +74,9 @@ class ClaimView(_View):
     text: str
     outcome: OutcomeView
     strength: StrengthView | None = None
+    short_answer: str = ""
+    confidence: float | None = None
+    relevance: int = 3
     explanation: str = ""
     evidence_ids: list[str] = []
     warnings: list[WarningView] = []
@@ -89,6 +92,10 @@ class ReportView(_View):
     check_id: str | None = None
     status: str
     status_message: str | None = None
+    original_message: str | None = None
+    overall_verdict: str | None = None
+    verdict_counts: dict[str, int] = {}
+    summary: str = ""
     claims: list[ClaimView] = []
     evidence: list[EvidenceView] = []
     handoff: HandoffView = HandoffView()

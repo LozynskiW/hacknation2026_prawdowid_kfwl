@@ -50,9 +50,10 @@ def _error_message(error) -> str:
 def to_report(answer: str) -> dict | None:
     """JSON ze skilla -> raport dla strony i bota. None = to nie był poprawny JSON.
 
-    Format skilla: original_message, overall_verdict, confidence_score, executive_summary,
-    claims[claim_id, evaluated_claim, verdict, confidence_score, summary_response_pl,
-    detailed_justification_pl, refusal_to_judge, sources_used[...]], error.
+    Format skilla (response-format): original_message, overall_verdict{...}, classification,
+    executive_summary, claims[claim_id, evaluated_claim, verdict, confidence_score,
+    relevance_to_question, summary_response_pl, detailed_justification_pl,
+    refusal_to_judge, sources_used[...]], error.
     """
     match = re.search(r"\{.*\}", answer, re.DOTALL)
     try:
@@ -80,6 +81,9 @@ def to_report(answer: str) -> dict | None:
                 "statusMessage": data.get("executive_summary") or None}
 
     report = {"checkId": check_id, "status": "COMPLETED", "statusMessage": None,
+              "originalMessage": data.get("original_message") or None,
+              "overallVerdict": _verdict_code(data.get("classification")) if data.get("classification") else None,
+              "verdictCounts": data.get("overall_verdict") or {},
               "summary": data.get("executive_summary") or "", "claims": [], "evidence": [],
               "handoff": {"status": "NONE"}}
     downgraded = False
