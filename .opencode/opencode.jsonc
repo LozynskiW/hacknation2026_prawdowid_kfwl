@@ -41,6 +41,8 @@
     { "action": "webfetch", "resource": "https://meteo.imgw.pl/*", "effect": "allow" },
     { "action": "webfetch", "resource": "https://hydro.imgw.pl/*", "effect": "allow" },
     { "action": "webfetch", "resource": "https://baltyk.imgw.pl/*", "effect": "allow" },
-    { "action": "webfetch", "resource": "https://www.prezydent.pl/*", "effect": "allow" }
+    { "action": "webfetch", "resource": "https://www.prezydent.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://www.pap.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://factchecktools.googleapis.com/*", "effect": "allow" }
   ]
 }

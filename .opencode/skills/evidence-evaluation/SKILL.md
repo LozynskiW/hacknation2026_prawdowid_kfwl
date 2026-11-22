@@ -40,6 +40,9 @@ Zbadaj czy twierdzenie nie zawiera tzw. *fałszywego kontekstu*:
 * Jeśli źródła zgłaszają wykluczające się liczby, daty lub przebieg zdarzeń, przeanalizuj potencjalne przyczyny sprzeczności (np. różne metody pomiarowe, aktualizacja danych, błąd medialny, celowa dezinformacja).
 * Wskaż jawnie sprzeczności w raporcie i oceń, które źródło posiada wyższy stopień wiarygodności chronologicznej i źródłowej.
 
+### 5. Ocena linków do źródeł
+* Link do strony z dowodami musi odnosić się do konkretnej strony internetowej, na której zawarte jest twierdzenie, które jest cytowane
+
 ---
 
 ## Procedura Krok po Kroku (Workflow)
