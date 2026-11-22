@@ -145,7 +145,7 @@
         faces.forEach(function (old) {
           if (!roll || still.matches) { old.remove(); return; }
           old.classList.add('thinking__face--out');
-          setTimeout(function () { old.remove(); }, 700);
+          setTimeout(function () { old.remove(); }, 300);
         });
         if (roll && !still.matches) face.classList.add('thinking__face--in');
         thinking.appendChild(face);

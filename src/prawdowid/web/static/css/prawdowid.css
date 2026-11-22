@@ -290,12 +290,12 @@ body {
   margin: 24px 0 0;
   text-align: center;
   color: var(--muted);
-  font-size: 1.75rem;
+  font-size: 2rem;
 }
 .ask__busy.htmx-request { display: block; }
 
 /* Hasla zmieniaja sie jak kostka przewrocona do tylu: stara scianka odjezdza gora w glab,
-   nowa wjezdza od dolu. Os obrotu lezy w srodku kostki (pol wysokosci za scianka). */
+   a dopiero potem nowa wjezdza od dolu - nigdy nie sa widoczne obie naraz. */
 .thinking {
   position: relative;
   display: block;
@@ -312,8 +312,9 @@ body {
   backface-visibility: hidden;
 }
 
-.thinking__face--out { animation: cube-out .6s ease-in-out forwards; }
-.thinking__face--in  { animation: cube-in .6s ease-in-out both; }
+.thinking__face--out { animation: cube-out .3s ease-in forwards; }
+/* Opoznienie = czas wyjazdu starej scianki; do tego czasu nowa jest niewidoczna (both). */
+.thinking__face--in  { animation: cube-in .35s ease-out .3s both; }
 
 /* Stara scianka odjezdza w gore i odchyla sie w glab, nowa wjezdza od dolu. */
 @keyframes cube-out {
@@ -487,7 +488,7 @@ body {
 /* Na telefonie mniej miejsca w poziomie - mniejsze odstepy, czcionka nadal duza. */
 @media (max-width: 520px) {
   .result { padding: 20px 18px; font-size: 1.5rem; }
-  .ask__busy { font-size: 1.25rem; }
+  .ask__busy { font-size: min(1.3125rem, 4.8vw); }  /* najdluzsze haslo miesci sie w jednej linii */
   .ask__input { font-size: 1.375rem; line-height: 34px; height: 50px; }
   .ask:focus-within .ask__input,
   .ask:has(.ask__input:not(:placeholder-shown)) .ask__input { font-size: 1.75rem; line-height: 40px; }
