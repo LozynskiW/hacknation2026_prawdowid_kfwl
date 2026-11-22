@@ -125,3 +125,13 @@ def to_report(answer: str) -> dict | None:
     if downgraded:
         report["summary"] = ""  # podsumowanie skilla opisuje werdykty, których nie potwierdziliśmy
     return report
+
+
+def is_final(answer: str) -> bool:
+    """Czy odpowiedź agenta to gotowy wynik: raport z treścią twierdzeń, odrzucenie, błąd albo prośba
+    o doprecyzowanie. Wynik pośredni skilla albo raport z pustymi twierdzeniami -> ponaglamy agenta."""
+    report = to_report(answer)
+    if report is None:
+        return False
+    return report["status"] != "COMPLETED" or all(c["text"].strip() for c in report["claims"])
+

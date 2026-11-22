@@ -21,7 +21,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 from prawdowid.api.opencode import AgentError, model_ref, server
-from prawdowid.api.report import to_report
+from prawdowid.api.report import is_final, to_report
 from prawdowid.api.settings import AGENT_TIMEOUT, AI_API_KEY, AI_MODEL, WEB_DIR
 from prawdowid.api.sources import allowed_patterns
 from prawdowid.api.web_view import to_template_context
@@ -75,7 +75,8 @@ async def run_check(body: CheckIn) -> dict:
     if not AI_API_KEY or not AI_MODEL:
         return failure("Brak konfiguracji modelu (AI_API_KEY / AI_MODEL).")
     try:
-        answer = await asyncio.wait_for(server.ask(user_message(body), timeout=AGENT_TIMEOUT, is_final=lambda a: to_report(a) is not None), AGENT_TIMEOUT + 30)
+        ask = server.ask(user_message(body), timeout=AGENT_TIMEOUT, is_final=is_final)
+        answer = await asyncio.wait_for(ask, AGENT_TIMEOUT + 30)
     except (TimeoutError, httpx.TimeoutException):
         return failure("Sprawdzanie trwało zbyt długo. Spróbuj ponownie.")
     except httpx.HTTPStatusError as e:
