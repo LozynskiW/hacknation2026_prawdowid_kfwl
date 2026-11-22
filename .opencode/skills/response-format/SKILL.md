@@ -1,3 +1,10 @@
+---
+name: response-format
+description: Użyj, żeby sformatować raport odnośnie weryfikacji twierdzeń na stronach
+version: 1.0.0
+tags: [fact-checking, verdict-formulation, plain-language, attribution, refusal-handling]
+---
+
 # FORMAT ODPOWIEDZI (obowiązkowy)
 
 Odpowiedz WYŁĄCZNIE jednym obiektem JSON, bez żadnego tekstu przed ani po:

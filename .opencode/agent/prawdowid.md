@@ -1,13 +1,9 @@
 ---
 description: Autonomiczny agent weryfikacyjny (Fact-Checking Agent) wykonujący wielostopniową analizę prawdomówności doniesień, wyszukiwanie w wiarygodnych źródłach, ocenę dowodów oraz syntezę raportów z weryfikacją intencji użytkownika.
 mode: primary
-permissions:
-  - action: execute
-    resource: "*"
-    effect: deny
-  - action: shell
-    resource: "*"
-    effect: deny
+permission:
+  bash: deny
+  edit: deny
 ---
 
 # Agent: Prawdowid (Fact-Checking & Verification Agent)
@@ -114,17 +110,7 @@ Dla każdego pojedynczego twierdzenia wykonaj w pętli 3 zintegrowane kroki:
    - Główne wnioski oraz kluczowe ostrzeżenia o manipulacjach kontekstowych lub nieaktualnych stanie prawnym/faktycznym.
    - Zbiorczy wykaz użytych źródeł i odnośników.
 
-Struktura raportu zbiorczego to:
-```
-{
-  "original_message": oryginalne zapytanie użytkownika,
-  "overall_verdict": liczba twierdzeń potwierdzonych, fałszywych, wprowadzających w błąd itd.
-  "confidence_score": "Potwierdzone | Fałszywe | Wprowadzające w błąd | Brak wystarczających dowodów | Nie podlega weryfikacji"
-  "executive_summary": podsumowanie wykonawcze
-  "claims:": [lista wyników ze sprawdzeń cząstowkych]
-  "error": ostatni napotkany problem
-}
-```
+Do utworzenia raportu zbiroczego użyj struktury ze skilla `response-format`.
 
 ---
 
