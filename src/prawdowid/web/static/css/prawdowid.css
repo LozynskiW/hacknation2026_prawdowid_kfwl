@@ -189,7 +189,7 @@ body {
   flex: 1;
   min-width: 0;
   /* Jedna linia na start; wysokosc ustawia skrypt w miare pisania. */
-  height: 48px;
+  height: 54px;
   max-height: 300px;
   padding: 8px 0;
   border: 0;
@@ -198,15 +198,15 @@ body {
   background: transparent;
   color: var(--ink);
   font: inherit;
-  font-size: 1.375rem;
-  line-height: 32px;
+  font-size: 1.625rem;
+  line-height: 38px;
   transition: font-size .2s ease, line-height .2s ease;
 }
 
 .ask:focus-within .ask__input,
 .ask:has(.ask__input:not(:placeholder-shown)) .ask__input {
-  font-size: 1.75rem;
-  line-height: 42px;
+  font-size: 2rem;
+  line-height: 46px;
 }
 
 .ask__input::placeholder { color: #8a8274; }
@@ -290,7 +290,7 @@ body {
   margin: 24px 0 0;
   text-align: center;
   color: var(--muted);
-  font-size: 1.5rem;
+  font-size: 1.75rem;
 }
 .ask__busy.htmx-request { display: block; }
 
@@ -341,8 +341,8 @@ body {
   border-radius: 16px;
   padding: 28px 32px;
   /* Wieksza czcionka i odstepy - odpowiedz ma sie czytac bez wysilku. */
-  font-size: 1.5rem;
-  line-height: 1.6;
+  font-size: 1.875rem;
+  line-height: 1.55;
   animation: answer-in .35s ease-out;
 }
 
@@ -367,7 +367,7 @@ body {
 .result__question span {
   display: block;
   margin-bottom: 6px;
-  font-size: .7em;
+  font-size: .75em;
   font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -393,7 +393,7 @@ body {
 }
 
 .result__summary p { margin: 0; }
-.result__summary .result__tally { margin-top: 8px; font-size: .85em; color: var(--muted); }
+.result__summary .result__tally { margin-top: 8px; font-size: .9em; color: var(--muted); }
 
 /* Statusy niewerdyktowe: przerywana ramka zamiast koloru werdyktu. */
 .result--notice { border-style: dashed; border-color: var(--muted); }
@@ -436,7 +436,7 @@ body {
 
 .claim__confidence {
   margin-left: 4px;
-  font-size: .75em;
+  font-size: .8em;
   font-weight: 600;
   color: var(--muted);
 }
@@ -455,7 +455,7 @@ body {
 .claim__meaning h4,
 .claim__heading {
   margin: 20px 0 8px;
-  font-size: .72em;
+  font-size: .78em;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--muted);
@@ -472,7 +472,7 @@ body {
 }
 
 .source__title { color: var(--ink); font-weight: 700; overflow-wrap: anywhere; }
-.source__meta { margin: 4px 0 0; font-size: .85em; color: var(--muted); }
+.source__meta { margin: 4px 0 0; font-size: .9em; color: var(--muted); }
 
 .source__quote {
   margin: 10px 0 0;
@@ -486,11 +486,11 @@ body {
 
 /* Na telefonie mniej miejsca w poziomie - mniejsze odstepy, czcionka nadal duza. */
 @media (max-width: 520px) {
-  .result { padding: 20px 18px; font-size: 1.25rem; }
-  .ask__busy { font-size: 1.125rem; }
-  .ask__input { font-size: 1.1875rem; }
+  .result { padding: 20px 18px; font-size: 1.5rem; }
+  .ask__busy { font-size: 1.25rem; }
+  .ask__input { font-size: 1.375rem; line-height: 34px; height: 50px; }
   .ask:focus-within .ask__input,
-  .ask:has(.ask__input:not(:placeholder-shown)) .ask__input { font-size: 1.5rem; line-height: 36px; }
+  .ask:has(.ask__input:not(:placeholder-shown)) .ask__input { font-size: 1.75rem; line-height: 40px; }
   .claim { padding: 16px; }
 }
 
