@@ -1,6 +1,9 @@
 # Źródła PRAWDOWID
 
-Lista źródeł, z których może korzystać skill weryfikacji, razem z licencjami i zasadami ich kwalifikacji. Pełny katalog do audytu: [`config/sources.yaml`](../config/sources.yaml). Hosty dopuszczone jako dowód (filtr w `src/prawdowid/api/report.py`): [`config/whitelist.txt`](../config/whitelist.txt).
+Lista źródeł, z których może korzystać agent weryfikacji, razem z licencjami i zasadami ich kwalifikacji.
+
+- **Co agent może pobrać i co pokazujemy jako dowód:** reguły `webfetch` w [`.opencode/opencode.jsonc`](../.opencode/opencode.jsonc). OpenCode blokuje agentowi każdy inny adres, a backend (`src/prawdowid/api/sources.py`) tymi samymi wzorcami odrzuca w raporcie źródło spoza listy. Opisy stron dla agenta: skill [`allowed-data-sources`](../.opencode/skills/allowed-data-sources/SKILL.md).
+- **Korpus demonstracyjny i licencje (audyt):** [`config/sources.yaml`](../config/sources.yaml), budowany przez `scripts/build_corpus.py`.
 
 ## Wymagania zadania i stan
 
@@ -49,7 +52,7 @@ Status źródła ani domena nie przesądzają o prawdziwości konkretnego twierd
   - przestaje spełniać zasady kwalifikacji.
 
   Źródło wykluczone może zostać jako „sprawdź sam” (`role: REFERRAL`), ale nigdy nie jest dowodem.
-- **Nowe źródło:** wpis w `config/sources.yaml` plus jego adres w `config/whitelist.txt`, po sprawdzeniu punktów 1-4.
+- **Nowe źródło:** po sprawdzeniu punktów 1-4 reguła `webfetch` w `.opencode/opencode.jsonc` (stały host, bez `*` przed domeną), opis w skillu `allowed-data-sources` i wpis w `config/sources.yaml`.
 
 ## Źródła aktywne
 
@@ -94,20 +97,5 @@ Status źródła ani domena nie przesądzają o prawdziwości konkretnego twierd
 
 - **Krótkie wpisy:** źródła bez jawnej licencji (CERT Polska, WHO, Policja, Pravda, FakeNews.pl, CEDMO) mają w korpusie tylko tytuł, lead i link. Dowód z nich wymaga otwarcia linku.
 - **Kanały blokowane:** dwie największe polskie organizacje fact-checkingowe blokują automaty (Demagog, AFP Sprawdzam), a Konkret24 wymaga licencji. Ich wyniki mogą trafiać do systemu przez Google Fact Check Tools API (wymaga klucza), które zbiera oznaczenia ClaimReview.
-- **Domena a host:** filtr w `src/prawdowid/api/report.py` porównuje dokładny host. Cytat z innej subdomeny tego samego wydawcy (np. `ecdc.europa.eu` zamiast `www.ecdc.europa.eu`) zostanie odrzucony.
-
-## Serwisy gov.pl (lista dla skilla)
-
-[`config/govpl_whitelist.json`](../config/govpl_whitelist.json) zawiera wszystkie serwisy instytucji na www.gov.pl. Jeden wpis to jeden serwis (`https://www.gov.pl/web/<jednostka>`) i obejmuje wszystkie jego podstrony. Każdy wpis ma pola:
-- `linkDoStrony`,
-- `krótkiOpisZawartości` (nazwa jednostki, działalność, sekcje serwisu),
-- `tagi` (kategoria z katalogu gov.pl i tematy),
-- `licencja`.
-
-Źródło spisu: katalog jednostek gov.pl oraz serwisy, do których linkują strony jednostek (np. stacje powiatowe, komendy PSP). Adresy, które przekierowują na stronę główną gov.pl (nieistniejące serwisy), są pomijane. Odświeżenie:
-
-```bash
-python scripts/govpl_sites.py
-```
-
-Przebieg trwa ok. 20 minut, z przerwą 0,5 s między zapytaniami do gov.pl.
+- **Domena a host:** wzorce mają stały host, więc źródło z innej subdomeny tego samego wydawcy (np. `sejm.gov.pl` zamiast `isap.sejm.gov.pl`) zostanie zablokowane, dopóki nie dopiszemy dla niej reguły. Wzorzec typu `https://*.gov.pl/*` byłby niebezpieczny: `*` obejmuje też `/`, więc pasowałby do `https://obca-strona.com/x.gov.pl/`.
+- **Korpus a agent:** część źródeł z korpusu (NBP, ISAP API, EC, ECDC, WHO, serwisy fact-checkingowe) nie jest na liście agenta. Agent pobiera strony na żywo tylko z listy w `.opencode/opencode.jsonc`.

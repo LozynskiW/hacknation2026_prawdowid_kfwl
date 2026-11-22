@@ -1,12 +1,17 @@
-"""PRAWDOWID - backend: zapytanie + agent -> dostawca AI -> raport.
+"""PRAWDOWID - backend: zapytanie -> agent Prawdowid w OpenCode V2 -> raport.
 
 Uruchomienie:  uvicorn prawdowid.api.app:app --port 8000
+               (backend sam uruchamia serwer OpenCode, patrz src/prawdowid/api/opencode.py)
 Ustawienia:    src/prawdowid/api/settings.py (.env)
 
 Kanały: strona WWW pod http://localhost:8000/ oraz bot Discorda (POST /api/v1/check).
 """
 
+import asyncio
+import logging
 import re
+from contextlib import asynccontextmanager
+from datetime import date
 
 import httpx
 from fastapi import FastAPI, Form, Request
@@ -15,13 +20,28 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-from prawdowid.api.agent import agent_files, system_prompt
-from prawdowid.api.providers import ask_ai
+from prawdowid.api.opencode import AgentError, model_ref, server
 from prawdowid.api.report import to_report
-from prawdowid.api.settings import AGENT_DIR, AI_API_KEY, AI_MODEL, AI_PROVIDER, WEB_DIR
+from prawdowid.api.settings import AGENT_TIMEOUT, AI_API_KEY, AI_MODEL, WEB_DIR
+from prawdowid.api.sources import allowed_patterns
 from prawdowid.api.web_view import to_template_context
 
-app = FastAPI(title="PRAWDOWID")
+log = logging.getLogger("prawdowid")
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # Serwer OpenCode startuje razem z backendem; gdy się nie uda, spróbujemy przy pierwszym pytaniu.
+    if AI_API_KEY and AI_MODEL:
+        try:
+            await server.start()
+        except (AgentError, OSError) as e:
+            log.warning("OpenCode nie wystartował: %s", e)
+    yield
+    server.stop()
+
+
+app = FastAPI(title="PRAWDOWID", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=WEB_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=WEB_DIR / "templates")
 
@@ -34,7 +54,8 @@ class CheckIn(BaseModel):
 
 
 def user_message(body: CheckIn) -> str:
-    parts = []
+    # Data, bo model nie wie, jaki jest dziś dzień (agent ma nie opierać się na wiedzy z treningu).
+    parts = [f"Dzisiejsza data: {date.today().isoformat()}"]
     if body.text:
         parts.append(f"Wiadomość od użytkownika:\n{body.text}")
     if body.url:
@@ -52,17 +73,22 @@ async def run_check(body: CheckIn) -> dict:
     if not (body.text or body.url):
         return failure("Brak treści do sprawdzenia.")
     if not AI_API_KEY or not AI_MODEL:
-        return failure("Brak konfiguracji dostawcy AI (AI_API_KEY / AI_MODEL).")
+        return failure("Brak konfiguracji modelu (AI_API_KEY / AI_MODEL).")
     try:
-        answer = await ask_ai(system_prompt(), user_message(body))
-    except httpx.TimeoutException:
-        return failure("Dostawca AI nie odpowiedział na czas. Spróbuj ponownie.")
+        answer = await asyncio.wait_for(server.ask(user_message(body), timeout=AGENT_TIMEOUT), AGENT_TIMEOUT + 30)
+    except (TimeoutError, httpx.TimeoutException):
+        return failure("Sprawdzanie trwało zbyt długo. Spróbuj ponownie.")
     except httpx.HTTPStatusError as e:
-        print(e.response.text)
-        return failure(f"Dostawca AI zwrócił błąd {e.response.status_code}.")
-    except (httpx.HTTPError, KeyError, IndexError, OSError) as e:
+        log.warning("OpenCode: HTTP %s %s", e.response.status_code, e.response.text[:500])
+        return failure(f"Agent zwrócił błąd {e.response.status_code}.")
+    except AgentError as e:
+        log.warning("OpenCode: %s", str(e)[:500])
+        if e.kind == "provider.quota":
+            return failure("Wyczerpał się limit zapytań do modelu. Spróbuj ponownie później.")
+        return failure("Nie udało się wykonać sprawdzenia. Spróbuj ponownie.")
+    except (httpx.HTTPError, KeyError, OSError) as e:
         return failure(f"Nie udało się wykonać sprawdzenia ({type(e).__name__}).")
-    # Model zwrócił JSON w uzgodnionym formacie → karty; inaczej → zwykły tekst.
+    # Agent zwrócił JSON w uzgodnionym formacie → karty; inaczej → zwykły tekst.
     return to_report(answer) or {"answer": answer}
 
 
@@ -85,8 +111,9 @@ async def web_check(request: Request, text: str = Form("")):
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok", "provider": AI_PROVIDER, "model": AI_MODEL, "keySet": bool(AI_API_KEY),
-            "agentFiles": [str(p.relative_to(AGENT_DIR)) for p in agent_files()]}
+    running = server.process is not None and server.process.poll() is None
+    return {"status": "ok", "agentRunning": running, "model": model_ref(), "keySet": bool(AI_API_KEY),
+            "allowedSources": len(allowed_patterns())}
 
 
 @app.post("/api/v1/check")

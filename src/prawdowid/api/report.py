@@ -1,6 +1,6 @@
 """JSON od agenta -> raport, z którego korzystają strona WWW i bot Discorda.
 
-Tu działa filtr listy dozwolonych źródeł: źródło spoza listy nie jest pokazywane jako dowód,
+Tu działa filtr listy dozwolonych źródeł (te same wzorce, którymi OpenCode ogranicza agenta): źródło spoza listy nie jest pokazywane jako dowód,
 a werdykt bez żadnego dozwolonego źródła zamieniamy na brak wystarczających dowodów.
 """
 
@@ -10,13 +10,7 @@ import unicodedata
 import uuid
 from urllib.parse import urlsplit
 
-from prawdowid.api.settings import WHITELIST_FILE
-
-
-def whitelist_hosts() -> set[str]:
-    if not WHITELIST_FILE.exists():
-        return set()
-    return {urlsplit(line.strip()).hostname or "" for line in WHITELIST_FILE.read_text().splitlines() if line.strip()}
+from prawdowid.api.sources import is_allowed
 
 
 # Werdykty skilla (po polsku) -> kody raportu, z którego korzystają strona i bot.
@@ -65,7 +59,14 @@ def to_report(answer: str) -> dict | None:
         data = json.loads(match.group(0)) if match else None
     except json.JSONDecodeError:
         return None
-    if not isinstance(data, dict) or not ("claims" in data or "error" in data):
+    if not isinstance(data, dict):
+        return None
+    data = {k.strip().rstrip(":"): v for k, v in data.items()}  # "claims:" -> "claims"
+    if str(data.get("status", "")).upper() == "ODRZUCONE":
+        # Skill input-formatter-validator odrzucił wiadomość (poza zakresem, porada, injection...).
+        return {"checkId": f"chk_{uuid.uuid4().hex[:12]}", "status": "OUT_OF_SCOPE",
+                "statusMessage": data.get("rejection_reason_pl") or None}
+    if not ("claims" in data or "error" in data):
         return None
 
     check_id = f"chk_{uuid.uuid4().hex[:12]}"
@@ -81,7 +82,6 @@ def to_report(answer: str) -> dict | None:
     report = {"checkId": check_id, "status": "COMPLETED", "statusMessage": None,
               "summary": data.get("executive_summary") or "", "claims": [], "evidence": [],
               "handoff": {"status": "NONE"}}
-    allowed = whitelist_hosts()
     downgraded = False
     for i, c in enumerate(claims_in, start=1):
         verdict = _verdict_code(c.get("verdict"))
@@ -93,7 +93,7 @@ def to_report(answer: str) -> dict | None:
             if not isinstance(s, dict):
                 continue
             host = urlsplit(str(s.get("url", ""))).hostname or ""
-            if allowed and host not in allowed:  # źródło spoza whitelisty - nie pokazujemy go jako dowodu
+            if not is_allowed(str(s.get("url", ""))):  # źródło spoza listy - nie pokazujemy go jako dowodu
                 warnings.append({"code": "SOURCE_REMOVED", "message": f"Pominięto źródło spoza listy dozwolonych ({host})."})
                 continue
             eid = f"e{len(report['evidence']) + 1}"

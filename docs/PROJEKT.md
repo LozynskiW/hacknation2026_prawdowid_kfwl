@@ -27,7 +27,7 @@ Każde źródło: tytuł, wydawca, data publikacji, data pobrania, link, wykorzy
 1. **Whitelista urzędowa (40 URL, 18 hostów)** – bezpieczeństwo i ochrona ludności: RCB, MSWiA, gov.pl/ostrzeżenia, IMGW (meteo, hydro, Bałtyk), PAA (promieniowanie), GIOŚ (powietrze), GIS, GDDKiA, ULC, UTK, Portal Pasażera, SOK, SAR, urzędy morskie, Wody Polskie, CERT, Policja, PSP, MON, MSZ (podróże), Odyseusz, Premier, Ministerstwo Infrastruktury.
 2. **Google Fact Check Tools API** – oceny fact-checkerów (ClaimReview).
 
-Plik źródłowy: `config/whitelist.txt`, katalog z metadanymi: `config/sources.yaml`.
+Lista dozwolonych stron: reguły `webfetch` w `.opencode/opencode.jsonc` (szczegóły: `docs/ZRODLA.md`), katalog z licencjami: `config/sources.yaml`.
 
 ## Twarde zasady
 - Żadna teza nie jest podana jako ustalenie bez dowodu ze źródła.
@@ -58,7 +58,7 @@ Ten sam input przez dowolny kanał daje ten sam wynik merytoryczny.
 | End-to-end bez interwencji / spójność kanałów | 100% |
 
 ## Stos technologiczny
-Python 3.12 + **FastAPI**, strona WWW w szablonach Jinja2 z HTMX, bot w discord.py. Weryfikację wykonuje agent opisany w `agent/` (procedura i skille), uruchamiany przez dostawcę modelu językowego wskazanego w `.env`. Układ katalogów: [README](../README.md).
+Python 3.12 + **FastAPI**, strona WWW w szablonach Jinja2 z HTMX, bot w discord.py. Weryfikację wykonuje agent opisany w `.opencode/` (procedura i skille), uruchamiany przez dostawcę modelu językowego wskazanego w `.env`. Układ katalogów: [README](../README.md).
 
 ## Dokumenty
 - `docs/WYMAGANIA.md` - wymagania.

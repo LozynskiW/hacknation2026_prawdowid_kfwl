@@ -1,15 +1,46 @@
+// Konfiguracja OpenCode V2 dla agenta Prawdowid (konfiguracja projektu: .opencode/).
+// OpenCode czyta stąd ten plik, agenta z agent/prawdowid.md i skille z skills/<nazwa>/SKILL.md.
+//
+// Uprawnienia: wszystko zablokowane, dozwolone tylko skille agenta i pobieranie stron z listy.
+// Lista webfetch to jedyna lista dozwolonych źródeł - backend (src/prawdowid/api/sources.py)
+// czyta ją stąd i odrzuca w raporcie źródło spoza listy.
+// Każdy wzorzec ma stały host (bez * przed domeną): "https://*.gov.pl/*" pasowałby też
+// do "https://obca-strona.com/x.gov.pl/", bo * obejmuje także znak "/".
 {
   "$schema": "https://opencode.ai/config.json",
   "default_agent": "prawdowid",
+  // Tytuły sesji są nam niepotrzebne, a każdy to dodatkowe zapytanie do modelu.
+  "agents": { "title": { "disabled": true } },
   "permissions": [
-    { "action": "websearch", "resource": "*", "effect": "deny" },
-    { "action": "webfetch", "resource": "*", "effect": "deny" },
-    { "action": "webfetch", "resource": "https://*.gov.pl/*", "effect": "allow" },
+    { "action": "*", "resource": "*", "effect": "deny" },
+    // Tylko skille agenta (wbudowane skille OpenCode zostają zablokowane).
+    { "action": "skill", "resource": "input-formatter-validator", "effect": "allow" },
+    { "action": "skill", "resource": "claim-extraction", "effect": "allow" },
+    { "action": "skill", "resource": "allowed-data-sources", "effect": "allow" },
+    { "action": "skill", "resource": "evidence-retrieval", "effect": "allow" },
+    { "action": "skill", "resource": "evidence-evaluation", "effect": "allow" },
+    { "action": "skill", "resource": "verdict-formulation", "effect": "allow" },
+    { "action": "skill", "resource": "response-format", "effect": "allow" },
+
+    { "action": "webfetch", "resource": "https://www.gov.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://odyseusz.gov.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://mazowiecka.policja.gov.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://monitoring.paa.gov.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://powietrze.gios.gov.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://drogi.gddkia.gov.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://ulc.gov.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://utk.gov.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://www.sar.gov.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://www.umgdy.gov.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://www.ums.gov.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://isap.sejm.gov.pl/*", "effect": "allow" },
     { "action": "webfetch", "resource": "https://policja.pl/*", "effect": "allow" },
-    { "action": "webfetch", "resource": "https://*.imgw.pl/*", "effect": "allow" },
     { "action": "webfetch", "resource": "https://moje.cert.pl/*", "effect": "allow" },
     { "action": "webfetch", "resource": "https://portalpasazera.pl/*", "effect": "allow" },
     { "action": "webfetch", "resource": "https://kgsok.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://meteo.imgw.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://hydro.imgw.pl/*", "effect": "allow" },
+    { "action": "webfetch", "resource": "https://baltyk.imgw.pl/*", "effect": "allow" },
     { "action": "webfetch", "resource": "https://www.prezydent.pl/*", "effect": "allow" }
   ]
 }
