@@ -132,8 +132,12 @@ class OpenCodeServer:
     def client(self, timeout: float) -> httpx.AsyncClient:
         return httpx.AsyncClient(base_url=self.url, auth=("opencode", self.password), timeout=timeout)
 
-    async def ask(self, text: str, timeout: float, is_final: Callable[[str], bool] = bool) -> str:
+    async def ask(self, text: str, timeout: float, is_final: Callable[[str], bool] = bool,
+                  stats: dict | None = None) -> str:
         """Nowa sesja na każde pytanie (bez historii), odpowiedź = tekst ostatniej wiadomości agenta.
+
+        stats - słownik, do którego (także przy błędzie) trafiają koszt, tokeny i pobrania stron
+        z całej sesji, zanim sesja zostanie usunięta (log sprawdzeń, FR-71).
 
         Stan sesji odpytujemy co sekundę zamiast czekać na /wait: przy błędzie dostawcy
         (np. wyczerpany limit) /wait potrafi wisieć do końca czasu, a wiadomość "idle" z błędem
@@ -161,6 +165,13 @@ class OpenCodeServer:
                 raise AgentError("Agent nie zwrócił odpowiedzi.")
             finally:
                 try:
+                    if stats is not None:
+                        r = await client.get(f"/api/session/{session_id}/message",
+                                             params={"order": "asc", "limit": "200"})
+                        stats.update(session_stats(r.json().get("data", [])))
+                except (httpx.HTTPError, ValueError):
+                    pass
+                try:
                     await client.delete(f"/api/session/{session_id}")
                 except httpx.HTTPError:
                     pass
@@ -187,6 +198,25 @@ NUDGE = (
     "To nie jest końcowy raport. Dokończ procedurę (kroki 1-5) i zwróć końcowy raport "
     "jako jeden obiekt JSON w formacie ze skilla response-format."
 )
+
+
+def session_stats(messages: list[dict]) -> dict:
+    """Koszt, tokeny i pobrania stron z wiadomości sesji OpenCode."""
+    cost, tokens_in, tokens_out, fetches, fetch_errors = 0.0, 0, 0, 0, 0
+    for m in messages:
+        if m.get("type") != "assistant":
+            continue
+        cost += float(m.get("cost") or 0)
+        tokens = m.get("tokens") or {}
+        tokens_in += int(tokens.get("input") or 0)
+        tokens_out += int(tokens.get("output") or 0) + int(tokens.get("reasoning") or 0)
+        for c in m.get("content") or []:
+            if c.get("type") == "tool" and c.get("name") == "webfetch":
+                fetches += 1
+                if (c.get("state") or {}).get("status") != "completed":
+                    fetch_errors += 1  # błąd strony albo adres spoza listy (permission.rejected)
+    return {"cost_usd": round(cost, 6), "tokens_in": tokens_in, "tokens_out": tokens_out,
+            "fetches": fetches, "fetch_errors": fetch_errors}
 
 
 def _final_text(messages: list[dict]) -> str:

@@ -6,6 +6,9 @@
                                  # Mistral: AI_PROVIDER=mistral, AI_MODEL=mistral-medium-latest
   OPENCODE_BIN=opencode2         # polecenie OpenCode V2 (pakiet npm @opencode/cli)
   AGENT_TIMEOUT=180              # ile sekund czekamy na odpowiedź agenta
+  CHECK_LOG_DB=data/prawdowid.db # log sprawdzeń (SQLite)
+  LOG_RETENTION_DAYS=7           # po ilu dniach wpisy logu są usuwane
+  ADMIN_TOKEN=...                # dostęp do podglądu logu (/api/v1/log); bez niego tylko z tego komputera
 """
 
 import os
@@ -32,3 +35,6 @@ AGENT_TIMEOUT = float(os.getenv("AGENT_TIMEOUT", "180"))
 AGENT_DIR = ROOT / ".opencode"  # konfiguracja projektu OpenCode: agent, skille, uprawnienia
 OPENCODE_DATA_DIR = _path("OPENCODE_DATA_DIR", "data/opencode")
 WEB_DIR = PACKAGE / "web"
+CHECK_LOG_DB = _path("CHECK_LOG_DB", "data/prawdowid.db")
+LOG_RETENTION_DAYS = float(os.getenv("LOG_RETENTION_DAYS", "7"))
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")

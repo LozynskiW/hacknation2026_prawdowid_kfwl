@@ -81,7 +81,8 @@ def to_report(answer: str) -> dict | None:
     if str(data.get("status", "")).upper() == "ODRZUCONE":
         # Skill input-formatter-validator odrzucił wiadomość (poza zakresem, porada, injection...).
         return {"checkId": f"chk_{uuid.uuid4().hex[:12]}", "status": "OUT_OF_SCOPE",
-                "statusMessage": data.get("rejection_reason_pl") or None}
+                "statusMessage": data.get("rejection_reason_pl") or None,
+                "rejectionCategory": str(data.get("rejection_category") or "").strip().upper() or None}
     if not ("claims" in data or "error" in data):
         return None
 

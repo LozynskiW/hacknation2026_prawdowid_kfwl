@@ -80,8 +80,8 @@ def render(outcome: CheckOutcome, full_result_url: str | None = None, question: 
     evidence = report.evidence_by_id()
     for claim in report.claims[:MAX_CLAIM_EMBEDS]:
         embeds.append(_claim_embed(claim, evidence))
-    embeds[-1].set_footer(text=FOOTER)
-    return _fit_total(embeds)
+    embeds[-1].set_footer(text=_footer(report.check_id))
+    return _fit_total(embeds, report.check_id)
 
 
 def answer_embeds(text: str, question: str | None = None) -> list[discord.Embed]:
@@ -122,7 +122,9 @@ def help_embed() -> discord.Embed:
             "❔ Brak wystarczających dowodów · 💬 Nie podlega weryfikacji.\n\n"
             "Gdy dowodów nie ma, nie zgaduję - powiem, czego nie udało się ustalić.\n\n"
             "**Prywatność:** Twoje ID Discorda nie jest przekazywane - tylko jego pseudonim. "
-            "Nie zapisujemy historii pytań."
+            "Dane osobowe (PESEL, telefon, e-mail, numery kont i dokumentów) maskujemy przed sprawdzeniem. "
+            "Sprawdzenia zapisujemy bez tych danych na 7 dni, potem je usuwamy. "
+            "Każde możesz usunąć od razu: `/usun <identyfikator ze stopki wyniku>`."
         ),
         color=GREY,
     )
@@ -181,7 +183,7 @@ def _status_embed(report: ReportView, question: str | None) -> discord.Embed:
     msg = report.status_message or "Nie udało się wykonać sprawdzenia."
     description = _question_block(question) + _cut(escape_markdown(msg), 1500)
     e = discord.Embed(title=f"{icon} {label}", description=description, color=GREY)
-    e.set_footer(text=FOOTER)
+    e.set_footer(text=_footer(report.check_id))
     return e
 
 
@@ -263,6 +265,13 @@ def _source_text(ev: EvidenceView) -> str:
 # ── Pomocnicze ──────────────────────────────────────────────────────────────
 
 
+def _footer(check_id: str | None) -> str:
+    """Stopka: ograniczenia wyniku i jak usunąć sprawdzenie z logu (/usun)."""
+    if not check_id:
+        return FOOTER
+    return f"{FOOTER}\nZapisujemy to sprawdzenie bez danych osobowych na 7 dni. Usuń od razu: /usun {check_id}"
+
+
 def _question_block(question: str | None) -> str:
     """Pytanie użytkownika na górze odpowiedzi (jak "Twoje pytanie" na stronie)."""
     if not question or not question.strip():
@@ -311,7 +320,7 @@ def _fmt_datetime(dt: datetime | None) -> str:
     return dt.strftime("%d.%m.%Y %H:%M") if dt else ""
 
 
-def _fit_total(embeds: list[discord.Embed]) -> list[discord.Embed]:
+def _fit_total(embeds: list[discord.Embed], check_id: str | None = None) -> list[discord.Embed]:
     """Pilnuje łącznego limitu znaków wiadomości - w razie potrzeby usuwa pola od ostatniego embedu."""
     def total() -> int:
         return sum(len(e) for e in embeds)
@@ -322,5 +331,5 @@ def _fit_total(embeds: list[discord.Embed]) -> list[discord.Embed]:
     while total() > MAX_TOTAL_CHARS and len(embeds) > 1:
         embeds.pop()
     if embeds and not embeds[-1].footer.text:
-        embeds[-1].set_footer(text=FOOTER)
+        embeds[-1].set_footer(text=_footer(check_id))
     return embeds
