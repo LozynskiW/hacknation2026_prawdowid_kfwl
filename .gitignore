@@ -224,3 +224,6 @@ __marimo__/
 
 # Korpus generowany przez scripts/build_corpus.py
 data/corpus/
+
+# Dane serwera OpenCode (sesje, logi) - tworzone przez backend
+data/opencode/
