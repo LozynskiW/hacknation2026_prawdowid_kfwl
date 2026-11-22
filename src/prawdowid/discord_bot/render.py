@@ -116,7 +116,8 @@ def help_embed() -> discord.Embed:
         description=(
             "Wyślij tekst lub link, a sprawdzę, co mówią na ten temat wiarygodne źródła "
             "(komunikaty urzędowe i dane publiczne z zamkniętej listy stron).\n\n"
-            "**Jak użyć:** `/sprawdz tresc:… link:…`, wiadomość prywatna do bota albo oznaczenie bota.\n\n"
+            "**Jak użyć:** `/sprawdz tresc:…`, wiadomość prywatna do bota albo oznaczenie bota. "
+            "Link wklej w treści - nie trzeba go podawać osobno.\n\n"
             "**Możliwe wyniki:** ✅ Potwierdzone · ❌ Fałszywe · ⚠️ Wprowadza w błąd · "
             "❔ Brak wystarczających dowodów · 💬 Nie podlega weryfikacji.\n\n"
             "Gdy dowodów nie ma, nie zgaduję - powiem, czego nie udało się ustalić.\n\n"
