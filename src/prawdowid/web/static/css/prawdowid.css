@@ -395,18 +395,24 @@ body {
   line-height: 1.5;
   color: var(--muted);
 }
-.result__limits { margin: 0 0 10px; }
-.result__forget { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 0; }
+.result__limits { margin: 0 0 6px; }
+/* "Usun teraz" wyglada jak link na koncu zdania - ten sam krok pisma co reszta stopki, bez ramki. */
+.result__forget { margin: 0; }
 .result__forget button {
-  padding: 4px 14px;
-  border: 1px solid var(--muted);
-  border-radius: 999px;
-  background: transparent;
+  display: inline;
+  margin: 0 0 0 .25em;
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--ink);
   font: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--muted);
+  text-underline-offset: .2em;
   cursor: pointer;
 }
-.result__forget button:hover { border-color: var(--ink); }
+.result__forget button:hover,
+.result__forget button:focus-visible { color: var(--red-bright); text-decoration-color: currentColor; outline: none; }
 .result__deleted { margin: 0; color: var(--ink); }
 
 .result__summary h2,
