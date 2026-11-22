@@ -9,6 +9,9 @@
   CHECK_LOG_DB=data/prawdowid.db # log sprawdzeń (SQLite)
   LOG_RETENTION_DAYS=7           # po ilu dniach wpisy logu są usuwane
   ADMIN_TOKEN=...                # dostęp do podglądu logu (/api/v1/log); bez niego tylko z tego komputera
+  MAX_TEXT_CHARS=5000            # maks. długość sprawdzanego tekstu
+  RATE_LIMIT_PER_MINUTE=5        # zapytania na osobę (IP strony / pseudonim z Discorda) na minutę
+  RATE_LIMIT_GLOBAL_PER_MINUTE=30  # zapytania łącznie na minutę (chroni limit u dostawcy modelu)
 """
 
 import os
@@ -38,3 +41,6 @@ WEB_DIR = PACKAGE / "web"
 CHECK_LOG_DB = _path("CHECK_LOG_DB", "data/prawdowid.db")
 LOG_RETENTION_DAYS = float(os.getenv("LOG_RETENTION_DAYS", "7"))
 ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "")
+MAX_TEXT_CHARS = int(os.getenv("MAX_TEXT_CHARS", "5000"))
+RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "5"))
+RATE_LIMIT_GLOBAL_PER_MINUTE = int(os.getenv("RATE_LIMIT_GLOBAL_PER_MINUTE", "30"))

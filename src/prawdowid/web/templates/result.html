@@ -4,7 +4,7 @@
 
   Kontekst:
     question  - tekst pytania uzytkownika
-    status    - TEXT | OK | NEEDS_CLARIFICATION | OUT_OF_SCOPE | TECHNICAL_FAILURE
+    status    - TEXT | OK | NEEDS_CLARIFICATION | OUT_OF_SCOPE | RATE_LIMITED | TECHNICAL_FAILURE
     message   - instrukcja dla statusow niewerdyktowych (co zrobic dalej)
     view      - summary, tally i claims (text, label, short_answer, confidence, explanation, sources, warnings, unknowns), gdy status == OK
     handoff   - True, gdy sprawa powinna trafic do analityka (tylko rekomendacja)
@@ -51,6 +51,7 @@
   <h2 class="result__notice-title">
     {%- if status == "NEEDS_CLARIFICATION" %}Potrzebujemy doprecyzowania
     {%- elif status == "OUT_OF_SCOPE" %}Poza zakresem sprawdzania
+    {%- elif status == "RATE_LIMITED" %}Za dużo zapytań
     {%- else %}Nie udało się teraz sprawdzić{% endif -%}
   </h2>
   <p class="result__notice-text">{{ message }}</p>

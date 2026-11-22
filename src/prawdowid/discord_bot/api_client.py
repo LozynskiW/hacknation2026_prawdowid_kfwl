@@ -110,9 +110,9 @@ class PrawdowidClient:
 
     @staticmethod
     def _parse(resp: httpx.Response) -> tuple[ReportView | str | None, str | None]:
-        if resp.status_code == 429:
-            return None, MSG_RATE_LIMITED
         body = _safe_json(resp)
+        if resp.status_code == 429:
+            return None, body.get("statusMessage") or MSG_RATE_LIMITED
         if resp.status_code >= 400:
             # Backend może zwrócić {"status": "TECHNICAL_FAILURE", "statusMessage": "..."}
             return None, body.get("statusMessage") or MSG_UNAVAILABLE
