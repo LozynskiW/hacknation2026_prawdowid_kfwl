@@ -10,6 +10,7 @@ Ze zmiennych środowiskowych dostaje tylko PATH i klucz dostawcy modelu.
 """
 
 import asyncio
+from collections.abc import Callable
 import os
 import secrets
 import socket
@@ -128,7 +129,7 @@ class OpenCodeServer:
     def client(self, timeout: float) -> httpx.AsyncClient:
         return httpx.AsyncClient(base_url=self.url, auth=("opencode", self.password), timeout=timeout)
 
-    async def ask(self, text: str, timeout: float) -> str:
+    async def ask(self, text: str, timeout: float, is_final: Callable[[str], bool] = bool) -> str:
         """Nowa sesja na każde pytanie (bez historii), odpowiedź = tekst ostatniej wiadomości agenta.
 
         Stan sesji odpytujemy co sekundę zamiast czekać na /wait: przy błędzie dostawcy
@@ -144,12 +145,16 @@ class OpenCodeServer:
             r.raise_for_status()
             session_id = r.json()["data"]["id"]
             try:
-                for prompt in (text, NUDGE):
+                answer = ""
+                # Agent potrafi skończyć turę za wcześnie: pustym tekstem (Gemini po narzędziach)
+                # albo wynikiem pośrednim skilla (np. samą walidacją wejścia). Wtedy ponaglamy.
+                for prompt in (text, *[NUDGE] * MAX_NUDGES):
                     (await client.post(f"/api/session/{session_id}/prompt", json={"text": prompt})).raise_for_status()
                     answer = await self._wait_idle(client, session_id, deadline)
-                    if answer:
+                    if answer and is_final(answer):
                         return answer
-                    # Gemini potrafi zakończyć turę po narzędziach pustym tekstem - jedno ponaglenie.
+                if answer:
+                    return answer
                 raise AgentError("Agent nie zwrócił odpowiedzi.")
             finally:
                 try:
@@ -174,7 +179,11 @@ class OpenCodeServer:
         raise TimeoutError
 
 
-NUDGE = "Zwróć teraz końcowy raport jako jeden obiekt JSON w formacie z sekcji Format odpowiedzi."
+MAX_NUDGES = 2
+NUDGE = (
+    "To nie jest końcowy raport. Dokończ procedurę (kroki 1-5) i zwróć końcowy raport "
+    "jako jeden obiekt JSON w formacie ze skilla response-format."
+)
 
 
 def _final_text(messages: list[dict]) -> str:
