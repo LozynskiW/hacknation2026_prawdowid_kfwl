@@ -21,14 +21,14 @@
 
 {% if status == "TEXT" %}
 {#- Model nie oddal odpowiedzi w uzgodnionym formacie - pokazujemy jego tekst bez kart. -#}
-<article class="result">
+<article class="result" data-outcome="neutral">
   <p class="result__question"><span>Twoje pytanie</span>{{ question }}</p>
   <p class="result__text">{{ answer }}</p>
 </article>
 
 {% elif status != "OK" %}
 {#- Statusy niewerdyktowe maja inny wyglad niz werdykty i mowia, co zrobic. -#}
-<div class="result result--notice result--{{ status | lower | replace('_', '-') }}">
+<div class="result result--notice result--{{ status | lower | replace('_', '-') }}" data-outcome="neutral">
   <p class="result__question"><span>Twoje pytanie</span>{{ question }}</p>
   <h2 class="result__notice-title">
     {%- if status == "NEEDS_CLARIFICATION" %}Potrzebujemy doprecyzowania
@@ -39,7 +39,8 @@
 </div>
 
 {% else %}
-<article class="result">
+{#- data-outcome steruje kolorem oka: positive (zielone), negative (czerwone), neutral (szare). -#}
+<article class="result" data-outcome="{{ outcome }}">
   <p class="result__question"><span>Twoje pytanie</span>{{ question }}</p>
 
   {% if view.summary %}

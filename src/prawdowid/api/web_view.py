@@ -99,5 +99,15 @@ def to_template_context(result: dict, question: str) -> dict:
     tally = f"Sprawdzono {total} {_claims_word(total)}: {', '.join(parts)}." if total else ""
     # Podsumowanie skilla, a gdy go nie ma (albo zostało odrzucone) - zliczenie werdyktów.
     view = {"summary": result.get("summary") or tally, "tally": tally, "claims": claims}
-    return {"status": "OK", "question": question, "view": view,
+    return {"status": "OK", "question": question, "view": view, "outcome": _outcome(counts),
             "handoff": (result.get("handoff") or {}).get("status") == "RECOMMENDED"}
+
+
+def _outcome(counts: dict[str, int]) -> str:
+    """Ogólny wynik dla koloru oka: fałsz lub wprowadzanie w błąd -> negative, same potwierdzenia
+    -> positive, reszta (brak dowodów, opinie, mieszane bez fałszu) -> neutral."""
+    if counts.get("FALSE") or counts.get("MISLEADING"):
+        return "negative"
+    if counts and set(counts) == {"CONFIRMED"}:
+        return "positive"
+    return "neutral"

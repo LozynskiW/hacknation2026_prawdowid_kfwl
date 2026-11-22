@@ -44,6 +44,10 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="PRAWDOWID", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=WEB_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=WEB_DIR / "templates")
+# Wersja CSS/JS w adresie (?v=...), żeby przeglądarka po zmianie pobrała nowe pliki, a nie starą kopię.
+templates.env.globals["static_version"] = max(
+    int(p.stat().st_mtime) for p in (WEB_DIR / "static").rglob("*") if p.is_file()
+)
 
 
 class CheckIn(BaseModel):

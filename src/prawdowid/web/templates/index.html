@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Prawdowid</title>
   <meta name="description" content="Prawdowid - sprawdzanie, czy informacja jest prawdziwa.">
-  <link rel="stylesheet" href="/static/css/prawdowid.css">
+  <link rel="stylesheet" href="/static/css/prawdowid.css?v={{ static_version }}">
   <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
-  <script src="/static/js/eye.js" defer></script>
+  <script src="/static/js/eye.js?v={{ static_version }}" defer></script>
 </head>
 <body>
   <header class="hero">
@@ -17,7 +17,7 @@
       - pisanie: otwiera sie i sledzi kursor tekstowy w polu pytania,
       - czekanie na odpowiedz: rozglada sie w lewo i w prawo i mruga, w petli.
     -->
-    <figure class="eye" aria-hidden="true">
+    <figure class="eye" data-mood="idle" aria-hidden="true">
       <svg class="eye__svg" viewBox="0 -44 400 308" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <!-- Ksztalt otwartego oka; przy mrugnieciu obie krzywe schodza sie w jedna linie. -->

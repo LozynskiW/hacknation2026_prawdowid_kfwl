@@ -66,9 +66,27 @@ body {
   height: auto;
 }
 
+/* Kolor oka zalezy od stanu (atrybut data-mood ustawia static/js/eye.js):
+   spoczynek - niebieskie, pisanie i czekanie - zolte, wynik pozytywny - zielone,
+   negatywny - czerwone, pozostale - szare. Teczowka i promienie ("rzesy") zmieniaja kolor razem. */
+.eye {
+  --eye-iris: #2f7de1;
+  --eye-dark: #163d72;
+}
+.eye[data-mood="busy"]     { --eye-iris: #f2b84b; --eye-dark: #8a5d0e; }
+.eye[data-mood="positive"] { --eye-iris: #2fa866; --eye-dark: #14532f; }
+.eye[data-mood="negative"] { --eye-iris: var(--red); --eye-dark: var(--red-dark); }
+.eye[data-mood="neutral"]  { --eye-iris: #8d8a84; --eye-dark: #4a4743; }
+
+.eye__rays path,
+.eye__iris-base,
+.eye__iris-fibres {
+  transition: fill .6s ease, stroke .6s ease;
+}
+
 .eye__rays path {
   fill: none;
-  stroke: var(--red);
+  stroke: var(--eye-iris);
   stroke-width: 6;
   stroke-linecap: square;
 }
@@ -88,12 +106,12 @@ body {
   stroke-width: 22;
 }
 
-.eye__iris-base { fill: var(--red); }
+.eye__iris-base { fill: var(--eye-iris); }
 
 /* Promieniste wlokna teczowki: gesto przerywany, gruby okrag. */
 .eye__iris-fibres {
   fill: none;
-  stroke: var(--red-dark);
+  stroke: var(--eye-dark);
   stroke-width: 34;
   stroke-dasharray: 2 4;
 }
@@ -171,8 +189,8 @@ body {
   flex: 1;
   min-width: 0;
   /* Jedna linia na start; wysokosc ustawia skrypt w miare pisania. */
-  height: 46px;
-  max-height: 260px;
+  height: 48px;
+  max-height: 300px;
   padding: 8px 0;
   border: 0;
   outline: none;
@@ -180,15 +198,15 @@ body {
   background: transparent;
   color: var(--ink);
   font: inherit;
-  font-size: 1.25rem;
-  line-height: 30px;
+  font-size: 1.375rem;
+  line-height: 32px;
   transition: font-size .2s ease, line-height .2s ease;
 }
 
 .ask:focus-within .ask__input,
 .ask:has(.ask__input:not(:placeholder-shown)) .ask__input {
-  font-size: 1.625rem;
-  line-height: 40px;
+  font-size: 1.75rem;
+  line-height: 42px;
 }
 
 .ask__input::placeholder { color: #8a8274; }
@@ -272,7 +290,7 @@ body {
   margin: 24px 0 0;
   text-align: center;
   color: var(--muted);
-  font-size: 1.375rem;
+  font-size: 1.5rem;
 }
 .ask__busy.htmx-request { display: block; }
 
@@ -282,6 +300,7 @@ body {
   position: relative;
   display: block;
   height: 1.6em;
+  overflow: hidden;      /* kadr: widac tylko jedna linie, scianki nie nachodza na siebie */
   perspective: 700px;
 }
 
@@ -291,20 +310,20 @@ body {
   line-height: 1.6em;
   white-space: nowrap;
   backface-visibility: hidden;
-  transform-origin: 50% 50% -.8em;
 }
 
 .thinking__face--out { animation: cube-out .6s ease-in-out forwards; }
 .thinking__face--in  { animation: cube-in .6s ease-in-out both; }
 
+/* Stara scianka odjezdza w gore i odchyla sie w glab, nowa wjezdza od dolu. */
 @keyframes cube-out {
-  from { transform: rotateX(0); opacity: 1; }
-  to   { transform: rotateX(90deg); opacity: 0; }
+  from { transform: translateY(0) rotateX(0); opacity: 1; }
+  to   { transform: translateY(-100%) rotateX(80deg); opacity: 0; }
 }
 
 @keyframes cube-in {
-  from { transform: rotateX(-90deg); opacity: 0; }
-  to   { transform: rotateX(0); opacity: 1; }
+  from { transform: translateY(100%) rotateX(-80deg); opacity: 0; }
+  to   { transform: translateY(0) rotateX(0); opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -322,7 +341,7 @@ body {
   border-radius: 16px;
   padding: 28px 32px;
   /* Wieksza czcionka i odstepy - odpowiedz ma sie czytac bez wysilku. */
-  font-size: 1.375rem;
+  font-size: 1.5rem;
   line-height: 1.6;
   animation: answer-in .35s ease-out;
 }
@@ -467,11 +486,11 @@ body {
 
 /* Na telefonie mniej miejsca w poziomie - mniejsze odstepy, czcionka nadal duza. */
 @media (max-width: 520px) {
-  .result { padding: 20px 18px; font-size: 1.1875rem; }
-  .ask__busy { font-size: 1.0625rem; }
-  .ask__input { font-size: 1.125rem; }
+  .result { padding: 20px 18px; font-size: 1.25rem; }
+  .ask__busy { font-size: 1.125rem; }
+  .ask__input { font-size: 1.1875rem; }
   .ask:focus-within .ask__input,
-  .ask:has(.ask__input:not(:placeholder-shown)) .ask__input { font-size: 1.375rem; line-height: 34px; }
+  .ask:has(.ask__input:not(:placeholder-shown)) .ask__input { font-size: 1.5rem; line-height: 36px; }
   .claim { padding: 16px; }
 }
 
