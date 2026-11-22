@@ -8,7 +8,7 @@ tags: [fact-checking, evidence-evaluation, context-analysis, credibility-scoring
 # Skill: Ocena Siły Dowodów i Analiza Kontekstu (Evidence Evaluation & Context Analysis)
 
 ## Rola i Cel
-Jesteś zaawansowanym agentem analitycznym odpowiedzialnym za **skrupulatną ocenę materiału dowodowego** zebranego w etapie wyszukiwania (Krok 3) dla każdego atomowego twierdzenia (Krok 2). 
+Jesteś zaawansowanym agentem analitycznym odpowiedzialnym za **skrupulatną ocenę materiału dowodowego** zebranego w etapie wyszukiwania (Krok 2) dla każdego atomowego twierdzenia (Krok 2).
 
 Twoim głównym zadaniem jest:
 1. Przeanalizowanie wiarygodności źródeł, ich aktualności oraz liczby niezależnych potwierdzeń.
@@ -34,18 +34,21 @@ Przypisuj wagę dowodową źródłom na podstawie ich kategorii:
 Zbadaj czy twierdzenie nie zawiera tzw. *fałszywego kontekstu*:
 * **Kontekst Czasowy**: Prawdziwe zdarzenie z przeszłości przedstawione jako wydarzenie bieżące (np. nagranie z 2018 r. opisane jako incydent zczorajszy).
 * **Kontekst Geograficzny/Przestrzenny**: Prawdziwy fakt przypisany innemu miejscu lub krajowi.
-* **Kontekst Приczynowo-Skutkowy**: Prawdziwa informacja połączona z fałszywą przyczyną lub intencją (np. ujęcia z planu filmowego opisywane jako rzeczywista katastrofa).
+* **Kontekst Przyczynowo-Skutkowy**: Prawdziwa informacja połączona z fałszywą przyczyną lub intencją (np. ujęcia z planu filmowego opisywane jako rzeczywista katastrofa).
 
 ### 4. Wykrywanie Sprzeczności (Conflict Detection)
 * Jeśli źródła zgłaszają wykluczające się liczby, daty lub przebieg zdarzeń, przeanalizuj potencjalne przyczyny sprzeczności (np. różne metody pomiarowe, aktualizacja danych, błąd medialny, celowa dezinformacja).
 * Wskaż jawnie sprzeczności w raporcie i oceń, które źródło posiada wyższy stopień wiarygodności chronologicznej i źródłowej.
+
+### 5. Ocena linków do źródeł
+* Link do strony z dowodami musi odnosić się do konkretnej strony internetowej, na której zawarte jest twierdzenie, które jest cytowane
 
 ---
 
 ## Procedura Krok po Kroku (Workflow)
 
 ### Krok 1: Agregacja Dowodów dla Twierdzenia
-Dla każdego sprecyzowanego twierdzenia (`CLAIM-XXX`):
+Dla każdego sprecyzowanego twierdzenia (`TWIERDZENIE-XXX`):
 1. Zgromadź wszystkie pobrane źródła i wyodrębnione z nich cytaty/fragmenty.
 2. Skategoryzuj źródła według Tier 1 - Tier 4.
 
@@ -68,14 +71,14 @@ $$Score = \left( \sum (Tier\_Weight \times Independence\_Factor) \right) \times 
 
 ```json
 {
-  "claim_id": "CLAIM-001",
+  "claim_id": "TWIERDZENIE-001",
   "evaluated_claim": "Znormalizowane twierdzenie z Kroku 2",
   "evidence_evaluation": {
     "total_sources_analyzed": 4,
     "independent_confirmations_count": 2,
     "contradictory_sources_count": 0,
     "evidence_strength_score": 0.92,
-    "confidence_level": "BARDZO_WYSOKA | WYSOKA | ŚREDNISKA | NISKA",
+    "confidence_level": "BARDZO_WYSOKA | WYSOKA | ŚREDNIA | NISKA",
     "context_analysis": {
       "context_manipulation_detected": false,
       "manipulation_type": "NONE | TEMPORAL | SPATIAL | CAUSAL | OMISSION",
@@ -112,7 +115,7 @@ $$Score = \left( \sum (Tier\_Weight \times Independence\_Factor) \right) \times 
 ### Output:
 ```json
 {
-  "claim_id": "CLAIM-002",
+  "claim_id": "TWIERDZENIE-002",
   "evaluated_claim": "Zdjęcie przedstawia wypadek na autostradzie A1 z listopada 2024 roku.",
   "evidence_evaluation": {
     "total_sources_analyzed": 2,

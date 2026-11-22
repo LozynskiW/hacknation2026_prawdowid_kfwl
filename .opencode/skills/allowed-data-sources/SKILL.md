@@ -1,6 +1,6 @@
 ---
 name: allowed-data-sources
-description: Użyj gdy musisz wyszukiwać weryfikować dane w oparciu o zaufane i pewne źródła informacji
+description: Użyj gdy musisz wyszukiwać i weryfikować dane w oparciu o zaufane i pewne źródła informacji
 version: 1.0.0
 tags: [fact-checking, input-validation, safety, prompt-injection-defense, formatting]
 ---
@@ -13,6 +13,8 @@ Skill to zbiór zaufanych stron internetowych gwarantujących dostęp do pewnych
 
 format: 
 url - opis co jest na stronie
+
+**Strony rządowe zawierające sprawdzone informacje:**
 
 ```
 https://odyseusz.gov.pl/ - Portal „Odyseusz” – aplikacja internetowa (wymaga JavaScript) wspierająca obywateli polskich przebywających za granicą w sytuacjach kryzysowych; zawiera informacje i zgłoszenia dotyczące zagrożeń dla Polaków poza krajem.
@@ -96,4 +98,11 @@ https://www.gov.pl/web/dyplomacja/informacje-dla-podrozujacych - Informacje MSZ 
 https://www.gov.pl/web/premier - Strona Kancelarii Prezesa Rady Ministrów – aktualności Premiera, komunikaty CIR, decyzje rządu, skład Rady Ministrów, exposé, wykaz prac legislacyjnych, informacje publiczne KPRM.
 
 https://www.prezydent.pl/ - Strona Prezydenta RP – aktualności i wydarzenia z udziałem Prezydenta, wizyty krajowe i zagraniczne, ustawy podpisane i zawetowane, kalendarz, działalność Małżonki Prezydenta, informacje o Kancelarii Prezydenta, komunikaty prasowe, multimedia.
+
+https://www.pap.pl/ - Strona Polskiej Agencji Prasowej, znajdują się na niej bieżące depesze informacyjne z kraju i ze świata, specjalistyczne serwisy tematyczne.
+```
+
+**API fact-checkingowe:**
+```
+https://factchecktools.googleapis.com/v1alpha1/claims:search - Google Fact Check Tools API. Agreguje oznaczenia ClaimReview publikowane przez zweryfikowanych fact-checkerów (IFCN/EFCSN) na całym świecie.
 ```

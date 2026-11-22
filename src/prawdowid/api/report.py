@@ -66,9 +66,10 @@ def _error_message(error) -> str:
 def to_report(answer: str) -> dict | None:
     """JSON ze skilla -> raport dla strony i bota. None = to nie był poprawny JSON.
 
-    Format skilla: original_message, overall_verdict, confidence_score, executive_summary,
-    claims[claim_id, evaluated_claim, verdict, confidence_score, summary_response_pl,
-    detailed_justification_pl, refusal_to_judge, sources_used[...]], error.
+    Format skilla (response-format): original_message, overall_verdict{...}, classification,
+    executive_summary, claims[claim_id, evaluated_claim, verdict, confidence_score,
+    relevance_to_question, summary_response_pl, detailed_justification_pl,
+    refusal_to_judge, sources_used[...]], error.
     """
     match = re.search(r"\{.*\}", answer, re.DOTALL)
     try:
@@ -97,6 +98,9 @@ def to_report(answer: str) -> dict | None:
                 "statusMessage": data.get("executive_summary") or None}
 
     report = {"checkId": check_id, "status": "COMPLETED", "statusMessage": None,
+              "originalMessage": data.get("original_message") or None,
+              "overallVerdict": _verdict_code(data.get("classification")) if data.get("classification") else None,
+              "verdictCounts": data.get("overall_verdict") or {},
               "summary": data.get("executive_summary") or "", "claims": [], "evidence": [],
               "handoff": {"status": "NONE"}}
     downgraded = False
@@ -130,15 +134,22 @@ def to_report(answer: str) -> dict | None:
                 "INSUFFICIENT_EVIDENCE", NO_SOURCE_TEXT, "", None, True)
             warnings.append({"code": "NO_SOURCE", "message": "Brak źródła z listy dozwolonych - wstrzymujemy się od oceny."})
         unknowns = ["Nie znaleziono źródła rozstrzygającego."] if verdict == "INSUFFICIENT_EVIDENCE" and not ids else []
+        try:
+            relevance = max(1, min(5, int(c.get("relevance_to_question") or 3)))
+        except (TypeError, ValueError):
+            relevance = 3
         report["claims"].append({
             "claimId": c.get("claim_id") or f"c{i}", "text": c.get("evaluated_claim", ""),
             "outcome": {"kind": "NOT_CHECKABLE"} if verdict == "NOT_CHECKABLE" else {"kind": "VERDICT", "verdict": verdict},
             "shortAnswer": short_answer, "explanation": explanation, "confidence": confidence,
+            "relevance": relevance,
             "evidenceIds": ids, "warnings": warnings, "unknowns": unknowns,
             "strength": {"level": _strength(confidence),
                          "factors": {"independentSources": len({report["evidence"][int(e[1:]) - 1]["source"]["publisher"] for e in ids})}}
             if verdict in ("CONFIRMED", "FALSE", "MISLEADING") else None,
         })
+    # Safety net: sortuj malejąco po relevance (agent też ma sortować w Kroku 4).
+    report["claims"].sort(key=lambda c: -c.get("relevance", 3))
     if downgraded:
         report["summary"] = ""  # podsumowanie skilla opisuje werdykty, których nie potwierdziliśmy
     return report

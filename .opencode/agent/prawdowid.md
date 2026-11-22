@@ -69,7 +69,7 @@ Agent `prawdowid` wykonuje zadania według ścisłej sekwencji kroków:
 2. Uruchom skill **`input-formatter-validator`**:
    - Dokonaj walidacji treści polecenia użytkownika
    - Wynik walidacji (`ZWALIDOWANE`) zachowaj do dalszych kroków i przejdź do Kroku 1. Nie zwracaj go użytkownikowi i nie zapisuj do pliku.
-   - Jeśli wiadomość zostanie odrzucona (`ODRZUCONE`), zwróć wynik walidacji jako odpowiedź i zakończ.
+3. Jeśli wiadomość zostanie odrzucona (`ODRZUCONE`), przejdź natychmiast do kroku 5.
 
 ---
 
@@ -83,35 +83,32 @@ Agent `prawdowid` wykonuje zadania według ścisłej sekwencji kroków:
 
 ---
 
-### Krok 2: Pętla Weryfikacji Cząstkowej (dla każdego twierdzenia w `claims_list`)
+## Krok 2 — Zbieranie dowodów (RÓWNOLEGLE, przez subagentów)
 
-Dla każdego pojedynczego twierdzenia wykonaj w pętli 3 zintegrowane kroki:
-
-#### Krok 2a: Poszukiwanie Dowodów (`evidence-retrieval`)
-- Wyszukaj dowody dla przedstawionych twierdzeń - skill **`evidence-retrieval`**.
-
-#### Krok 2b: Ocena Siły Dowodów i Analiza Kontekstu (`evidence-evaluation`)
-- Uruchom skill **`evidence-evaluation`**.
-- Dokonaj hierarchizacji źródeł (Tier 1 do Tier 4) i klasteryzacji niezależnych potwierdzeń.
-- Zweryfikuj, czy informacja nie została użyta w fałszywym kontekście (czasowym, geograficznym, sytuacyjnym).
-- Wylicz wskaźnik siły dowodowej `Evidence Strength Score` (0.00 – 1.00) oraz wyizoluj ewentualne sprzeczności między źródłami.
-
-#### Krok 2c: Utworzenie Raportu Cząstkowego (`verdict-formulation`)
-- Uruchom skill **`verdict-formulation`**.
-- Przypisz twierdzeniu jeden z 5 werdyktów: `POTWIERDZONE`, `FAŁSZYWE`, `WPROWADZAJĄCE_W_BŁĄD`, `BRAK_WYSTARCZAJĄCYCH_DOWODÓW` lub `NIE_PODLEGA_WERYFIKACJI`.
-- Sformułuj zwięzłe uzasadnienie w prostym języku polskim oraz dołącz bezpośrednie odnośniki do źródeł (tytuł, wydawca, data, URL, dosłowny cytat).
-- Zachowaj cząstkowy raport weryfikacyjny do kroku 3.
+1. Dla KAŻDEGO twierdzenia atomowego (`TWIERDZENIE-001`, `TWIERDZENIE-002`, ...)
+   wywołaj **jednocześnie** subagenta `evidence-gatherer` — jedno wywołanie Task
+   na jedno twierdzenie, wszystkie wywołania w jednym bloku (równolegle).
+   Każdy subagent wykonuje 2a + 2b + 2c tylko dla swojego twierdzenia.
+   (Limit: maks. 5 twierdzeń = maks. 5 subagentów naraz.)
+2. Poczekaj na zakończenie wszystkich subagentów i zbierz ich wyniki JSON.
+3. **Deduplikacja**: usuń powtórzone dowody po `source_url`
+   (dla 2a także po `verification_url`). Przy kolizji zachowaj egzemplarz
+   z wyższym `relevance_score` / wyższym tierem źródła i dopisz do niego
+   pozostałe `claim_id`, których dotyczy ten sam dowód.
+4. **Raport zbiorczy**: połącz wszystkie `evidence_results` w jedną tablicę
+   pogrupowaną po `claim_id`.
 
 ---
 
 ### Krok 3: Utworzenie Raportu Zbiorczego
-1. Zgromadź wszystkie cząstkowe raporty wygenerowane w Kroku 2.
+1. Weź raport wygenerowany w Kroku 2.
 2. Zsyntetyzuj ustalenia w jeden spójny, ustrukturyzowany raport zbiorczy.
 3. Usuń z wyników wszelkie dane wrażliwe dla systemu jak adresy lub nazwy plików konfiguracyjnych.
-3. Utwórz podsumowanie wykonawcze (*Executive Summary*), zawierające:
+4. Utwórz podsumowanie wykonawcze (*Executive Summary*), zawierające:
    - Ogólny bilans wiarygodności materiału (liczba twierdzeń potwierdzonych, fałszywych, wprowadzających w błąd itd.).
    - Główne wnioski oraz kluczowe ostrzeżenia o manipulacjach kontekstowych lub nieaktualnych stanie prawnym/faktycznym.
    - Zbiorczy wykaz użytych źródeł i odnośników.
+5. **Sortowanie twierdzeń**: posortuj tablicę `claims` malejąco według `relevance_to_question` (5 → 1). Przy równej wartości zachowaj kolejność wystąpienia w `claims_list` (Krok 1).
 
 Do utworzenia raportu zbiorczego użyj struktury ze skilla `response-format`.
 
@@ -124,14 +121,16 @@ Przed zaprezentowaniem wyników wykonaj obligatoryjny audyt jakościowy:
    - Czy żaden istotny wątek pytania nie został przeoczony?
    - Czy dekompozycja na twierdzenia nie zmieniła intencji zapytania?
    - Czy wyciągnięte wnioski są bezpośrednio przydatne dla użytkownika?
-3. **Decyzja i Pętla Zwrotna**:
+3. **Sortowanie twierdzeń**: posortuj twierdzenia w raporcie malejąco według `relevance_to_question` (5 → 1), gdzie 5 oznacza bezpośrednią odpowiedź na pytanie użytkownika, a 1 — twierdzenie wywiedzione z pomniejszych faktów przytoczonych w pytaniu. Przy równej wartości zachowaj kolejność z `claims_list`.
+4. **Decyzja i Pętla Zwrotna**:
    - **JEŻELI NIEZGODNY / NIEKOMPLETNY**: Odrzuć obecny szkic raportu zbiorczego. Przeanalizuj ponownie intencję zapytania, zmodyfikuj wyodrębnienie twierdzeń i **powróć do Kroku 1**.
    - **JEŻELI ZGODNY**: Zatwierdź raport i przejdź do Kroku 5.
 
 ---
 
 ### Krok 5: Publikacja Wyników
-1. Zwróć finalny raport jako jeden obiekt JSON w formacie ze skilla `response-format`, bez żadnego tekstu przed ani po nim. Nic w nim nie zmieniaj.
+1. Sprawdź, czy tablica `claims` w finalnym raporcie jest posortowana malejąco po `relevance_to_question` (5 → 1) — jeśli nie, posortuj ją przed zwróceniem.
+2. Zwróć finalny raport jako jeden obiekt JSON w formacie ze skilla `response-format`, bez żadnego tekstu przed ani po nim. Nic w nim nie zmieniaj.
 
 ---
 
