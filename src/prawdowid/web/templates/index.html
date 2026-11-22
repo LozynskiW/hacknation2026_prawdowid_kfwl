@@ -77,7 +77,11 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
         </button>
       </div>
-      <p id="ask-busy" class="ask__busy" role="status">Sprawdzam w wiarygodnych źródłach…</p>
+      <!-- W trakcie sprawdzania hasla zmieniaja sie co 4 s jak przewracana do tylu kostka (skrypt nizej). -->
+      <div id="ask-busy" class="ask__busy" role="status">
+        <span class="visually-hidden">Sprawdzam, to może chwilę potrwać.</span>
+        <span class="thinking" aria-hidden="true"><span class="thinking__face">Sprawdzam w wiarygodnych źródłach…</span></span>
+      </div>
     </form>
 
     <!-- Pole odpowiedzi pojawia sie dopiero, gdy jest odpowiedz. -->
@@ -98,7 +102,7 @@
 
       function fit() {
         input.style.height = 'auto';
-        input.style.height = Math.min(input.scrollHeight, 220) + 'px';
+        input.style.height = Math.min(input.scrollHeight, 260) + 'px';
         send.disabled = !input.value.trim();
       }
 
@@ -113,6 +117,52 @@
           if (input.value.trim()) form.requestSubmit();
         }
       });
+
+      // "Myslenie pod spodem": kolejne kroki sprawdzania, kazde haslo inne, zmiana co 4 s.
+      var PHRASES = [
+        'Sprawdzam w wiarygodnych źródłach…',
+        'Rozbieram wiadomość na twierdzenia…',
+        'Oddzielam fakty od opinii…',
+        'Wybieram źródła urzędowe…',
+        'Czytam komunikaty instytucji…',
+        'Szukam dosłownych cytatów…',
+        'Porównuję daty publikacji…',
+        'Zestawiam ze sobą dowody…',
+        'Sprawdzam, czy kontekst się zgadza…',
+        'Układam werdykt…'
+      ];
+      var thinking = document.querySelector('.thinking');
+      var still = window.matchMedia('(prefers-reduced-motion: reduce)');
+      var timer = null;
+      var step = 0;
+
+      function showPhrase(text, roll) {
+        var faces = thinking.querySelectorAll('.thinking__face:not(.thinking__face--out)');
+        var face = document.createElement('span');
+        face.className = 'thinking__face';
+        face.textContent = text;
+        faces.forEach(function (old) {
+          if (!roll || still.matches) { old.remove(); return; }
+          old.classList.add('thinking__face--out');
+          setTimeout(function () { old.remove(); }, 700);
+        });
+        if (roll && !still.matches) face.classList.add('thinking__face--in');
+        thinking.appendChild(face);
+      }
+
+      function startThinking() {
+        clearInterval(timer);
+        thinking.textContent = '';
+        step = 0;
+        showPhrase(PHRASES[0], false);
+        timer = setInterval(function () {
+          step = (step + 1) % PHRASES.length;
+          showPhrase(PHRASES[step], true);
+        }, 4000);
+      }
+
+      form.addEventListener('htmx:beforeRequest', startThinking);
+      form.addEventListener('htmx:afterRequest', function () { clearInterval(timer); });
 
       // Jedno pytanie - jedna odpowiedz: nowe pytanie czysci poprzednia odpowiedz.
       form.addEventListener('htmx:beforeRequest', function () { answer.innerHTML = ''; });

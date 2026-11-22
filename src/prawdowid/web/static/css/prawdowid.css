@@ -129,7 +129,7 @@ body {
 /* ---------- Pytanie ---------- */
 
 .check {
-  width: min(900px, 100%);
+  width: min(960px, 100%);
   margin: 0 auto auto;
   padding: 16px 16px 40px;
 }
@@ -148,11 +148,11 @@ body {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  max-width: 680px;
+  max-width: 720px;
   margin: 0 auto;
-  padding: 8px 8px 8px 20px;
+  padding: 8px 8px 8px 24px;
   border: 1px solid var(--panel-edge);
-  border-radius: 28px;
+  border-radius: 32px;
   background: var(--panel);
   transition: max-width .25s ease, padding .25s ease, border-radius .25s ease, border-color .15s;
 }
@@ -163,16 +163,16 @@ body {
 .ask:focus-within .ask__bar,
 .ask:has(.ask__input:not(:placeholder-shown)) .ask__bar {
   max-width: 100%;
-  padding: 12px 12px 12px 28px;
-  border-radius: 36px;
+  padding: 12px 12px 12px 32px;
+  border-radius: 44px;
 }
 
 .ask__input {
   flex: 1;
   min-width: 0;
   /* Jedna linia na start; wysokosc ustawia skrypt w miare pisania. */
-  height: 40px;
-  max-height: 220px;
+  height: 46px;
+  max-height: 260px;
   padding: 8px 0;
   border: 0;
   outline: none;
@@ -180,15 +180,15 @@ body {
   background: transparent;
   color: var(--ink);
   font: inherit;
-  font-size: 1rem;
-  line-height: 24px;
+  font-size: 1.25rem;
+  line-height: 30px;
   transition: font-size .2s ease, line-height .2s ease;
 }
 
 .ask:focus-within .ask__input,
 .ask:has(.ask__input:not(:placeholder-shown)) .ask__input {
-  font-size: 1.375rem;
-  line-height: 34px;
+  font-size: 1.625rem;
+  line-height: 40px;
 }
 
 .ask__input::placeholder { color: #8a8274; }
@@ -197,8 +197,8 @@ body {
   flex: none;
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 46px;
+  height: 46px;
   border: 0;
   border-radius: 50%;
   background: var(--red);
@@ -209,8 +209,8 @@ body {
 
 .ask:focus-within .ask__send,
 .ask:has(.ask__input:not(:placeholder-shown)) .ask__send {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
 }
 
 .ask__send svg {
@@ -232,15 +232,49 @@ body {
 }
 
 /* Komunikat "Sprawdzam..." widoczny tylko w trakcie zapytania HTMX. */
-.ask__busy,
-.answer__busy {
-  margin: 18px 0 0;
+.ask__busy {
+  display: none;
+  margin: 24px 0 0;
   text-align: center;
   color: var(--muted);
-  font-size: 1.1rem;
+  font-size: 1.375rem;
 }
-.ask__busy { display: none; }
 .ask__busy.htmx-request { display: block; }
+
+/* Hasla zmieniaja sie jak kostka przewrocona do tylu: stara scianka odjezdza gora w glab,
+   nowa wjezdza od dolu. Os obrotu lezy w srodku kostki (pol wysokosci za scianka). */
+.thinking {
+  position: relative;
+  display: block;
+  height: 1.6em;
+  perspective: 700px;
+}
+
+.thinking__face {
+  position: absolute;
+  inset: 0;
+  line-height: 1.6em;
+  white-space: nowrap;
+  backface-visibility: hidden;
+  transform-origin: 50% 50% -.8em;
+}
+
+.thinking__face--out { animation: cube-out .6s ease-in-out forwards; }
+.thinking__face--in  { animation: cube-in .6s ease-in-out both; }
+
+@keyframes cube-out {
+  from { transform: rotateX(0); opacity: 1; }
+  to   { transform: rotateX(90deg); opacity: 0; }
+}
+
+@keyframes cube-in {
+  from { transform: rotateX(-90deg); opacity: 0; }
+  to   { transform: rotateX(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking__face--out, .thinking__face--in { animation: none; }
+}
 
 /* ---------- Odpowiedz (templates/result.html) ---------- */
 
@@ -253,8 +287,8 @@ body {
   border-radius: 16px;
   padding: 28px 32px;
   /* Wieksza czcionka i odstepy - odpowiedz ma sie czytac bez wysilku. */
-  font-size: 1.1875rem;
-  line-height: 1.65;
+  font-size: 1.375rem;
+  line-height: 1.6;
   animation: answer-in .35s ease-out;
 }
 
@@ -398,7 +432,11 @@ body {
 
 /* Na telefonie mniej miejsca w poziomie - mniejsze odstepy, czcionka nadal duza. */
 @media (max-width: 520px) {
-  .result { padding: 20px 18px; font-size: 1.0625rem; }
+  .result { padding: 20px 18px; font-size: 1.1875rem; }
+  .ask__busy { font-size: 1.0625rem; }
+  .ask__input { font-size: 1.125rem; }
+  .ask:focus-within .ask__input,
+  .ask:has(.ask__input:not(:placeholder-shown)) .ask__input { font-size: 1.375rem; line-height: 34px; }
   .claim { padding: 16px; }
 }
 
