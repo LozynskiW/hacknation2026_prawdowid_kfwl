@@ -1,0 +1,125 @@
+{#
+  Fragment odpowiedzi. Wstawiany przez HTMX do #answer w index.html.
+  Jedno pytanie - jedna odpowiedz: fragment zawsze zastepuje poprzednia odpowiedz, bez historii.
+
+  Kontekst:
+    question  - tekst pytania uzytkownika
+    status    - TEXT | OK | NEEDS_CLARIFICATION | OUT_OF_SCOPE | RATE_LIMITED | TECHNICAL_FAILURE
+    message   - instrukcja dla statusow niewerdyktowych (co zrobic dalej)
+    view      - summary, tally i claims (text, label, short_answer, confidence, explanation, sources, warnings, unknowns), gdy status == OK
+    handoff   - True, gdy sprawa powinna trafic do analityka (tylko rekomendacja)
+    answer    - zwykly tekst modelu, gdy status == TEXT (odpowiedz poza uzgodnionym formatem)
+    check_id  - identyfikator sprawdzenia w logu (przycisk "Usun teraz")
+  Kontekst buduje src/prawdowid/api/web_view.py.
+#}
+{%- set labels = {
+  "Potwierdzone": ("confirmed", "✓"),
+  "Fałszywe": ("false", "✕"),
+  "Wprowadza w błąd": ("misleading", "!"),
+  "Brak wystarczających dowodów": ("insufficient", "?"),
+  "Nie podlega weryfikacji (opinia lub prognoza)": ("not-checkable", "–"),
+} -%}
+
+{#- Stopka każdego wyniku: ograniczenia odpowiedzi (FR-45) i usunięcie sprawdzenia z logu (FR-82). -#}
+{%- macro result_footer(limits=true) -%}
+<footer class="result__footer">
+  {%- if limits %}
+  <p class="result__limits"><strong>Ograniczenia:</strong> sprawdzamy tylko w źródłach z zamkniętej listy (głównie urzędowych),
+    a wynik przygotowuje system z użyciem SI i może się mylić. Otwórz źródła i przeczytaj je samodzielnie.</p>
+  {%- endif %}
+  {%- if check_id %}
+  <form class="result__forget" hx-post="/wynik/{{ check_id }}/usun" hx-target="this" hx-swap="outerHTML">
+    Zapisujemy to sprawdzenie bez danych osobowych na kontrolę jakości, potem je usuwamy.<button type="submit">Usuń teraz</button>
+  </form>
+  {%- endif %}
+</footer>
+{%- endmacro %}
+
+{% if status == "TEXT" %}
+{#- Model nie oddal odpowiedzi w uzgodnionym formacie - pokazujemy jego tekst bez kart. -#}
+<article class="result" data-outcome="neutral">
+  <p class="result__question"><span>Twoje pytanie</span>{{ question }}</p>
+  <p class="result__text">{{ answer }}</p>
+  {{ result_footer() }}
+</article>
+
+{% elif status != "OK" %}
+{#- Statusy niewerdyktowe maja inny wyglad niz werdykty i mowia, co zrobic. -#}
+<div class="result result--notice result--{{ status | lower | replace('_', '-') }}" data-outcome="neutral">
+  <p class="result__question"><span>Twoje pytanie</span>{{ question }}</p>
+  <h2 class="result__notice-title">
+    {%- if status == "NEEDS_CLARIFICATION" %}Potrzebujemy doprecyzowania
+    {%- elif status == "OUT_OF_SCOPE" %}Poza zakresem sprawdzania
+    {%- elif status == "RATE_LIMITED" %}Za dużo zapytań
+    {%- else %}Nie udało się teraz sprawdzić{% endif -%}
+  </h2>
+  <p class="result__notice-text">{{ message }}</p>
+  {{ result_footer(limits=false) }}
+</div>
+
+{% else %}
+{#- data-outcome steruje kolorem oka: positive (zielone), negative (czerwone), neutral (szare). -#}
+<article class="result" data-outcome="{{ outcome }}">
+  <p class="result__question"><span>Twoje pytanie</span>{{ question }}</p>
+
+  {% if view.summary %}
+  <section class="result__summary">
+    <h2>Podsumowanie</h2>
+    <p>{{ view.summary }}</p>
+    {% if view.tally and view.tally != view.summary %}<p class="result__tally">{{ view.tally }}</p>{% endif %}
+  </section>
+  {% endif %}
+
+  {% for claim in view.claims %}
+  {%- set kind, icon = labels.get(claim.label, ("unknown", "•")) %}
+  <section class="claim claim--{{ kind }}">
+    <p class="claim__label"><span class="claim__icon" aria-hidden="true">{{ icon }}</span>{{ claim.label }}
+      {%- if claim.confidence %}<span class="claim__confidence">pewność {{ claim.confidence }}</span>{% endif %}</p>
+    <h3 class="claim__text">{{ claim.text }}</h3>
+
+    {% if claim.short_answer %}
+    <p class="claim__answer">{{ claim.short_answer }}</p>
+    {% endif %}
+
+    {% if claim.explanation %}
+    <div class="claim__meaning">
+      <h4>Uzasadnienie</h4>
+      <p>{{ claim.explanation }}</p>
+    </div>
+    {% endif %}
+
+    {% if claim.sources %}
+    <h4 class="claim__heading">Źródła</h4>
+    <ul class="sources">
+      {% for src in claim.sources %}
+      <li class="source">
+        <a class="source__title" href="{{ src.url }}" rel="noopener noreferrer" target="_blank">{{ src.title }}</a>
+        <p class="source__meta">{{ src.publisher }}{% if src.published_at %} · {{ src.published_at }}{% endif %}</p>
+        {% if src.quote %}<blockquote class="source__quote">{{ src.quote }}</blockquote>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if claim.warnings %}
+    <h4 class="claim__heading">Uwaga</h4>
+    <ul class="claim__list">
+      {% for w in claim.warnings %}<li>{{ w }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if claim.unknowns %}
+    <h4 class="claim__heading">Czego nie udało się ustalić</h4>
+    <ul class="claim__list">
+      {% for u in claim.unknowns %}<li>{{ u }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+  {% endfor %}
+
+  {% if handoff %}
+  <p class="result__handoff">Rekomendujemy przekazanie tej sprawy do analityka.</p>
+  {% endif %}
+  {{ result_footer() }}
+</article>
+{% endif %}

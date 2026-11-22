@@ -224,3 +224,9 @@ __marimo__/
 
 # Korpus generowany przez scripts/build_corpus.py
 data/corpus/
+
+# Dane serwera OpenCode (sesje, logi) - tworzone przez backend
+data/opencode/
+# Log sprawdzeń (SQLite) - dane użytkowników, nigdy do repozytorium
+data/*.db
+data/*.db-journal

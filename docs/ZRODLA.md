@@ -1,113 +1,72 @@
-# Źródła PRAWDOWID
+# Źródła Prawdowida
 
-Lista źródeł, z których może korzystać skill weryfikacji, razem z licencjami i zasadami ich kwalifikacji. Pełny katalog do audytu: [`config/sources.yaml`](../config/sources.yaml). Hosty dopuszczone jako dowód (filtr w `app_simple`): [`config/whitelist.txt`](../config/whitelist.txt).
+Z jakich źródeł korzysta agent, na jakiej podstawie, jak je dobieramy i aktualizujemy.
 
-## Wymagania zadania i stan
+## Gdzie jest lista
 
-Zadanie (sekcja 5, „Źródła”): korpus demonstracyjny min. **100 dokumentów lub rekordów**, min. **10 domen**, co najmniej **dwa typy źródeł** (pierwotne lub urzędowe + wiarygodne wtórne), lista dostępna do audytu.
+- **Co agent może pobrać:** reguły `webfetch` w [`.opencode/opencode.jsonc`](../.opencode/opencode.jsonc). OpenCode blokuje agentowi każdy inny adres. Backend (`src/prawdowid/api/sources.py`) tymi samymi regułami sprawdza źródła w wyniku i usuwa źródło spoza listy, zanim użytkownik je zobaczy.
+- **Opis stron dla agenta:** skill [`allowed-data-sources`](../.opencode/skills/allowed-data-sources/SKILL.md), czyli 43 strony z opisem, co na nich jest. Agent wybiera z nich stronę pasującą do twierdzenia.
+- **Oceny fact-checkerów:** skill [`google-fact-check`](../.opencode/skills/google-fact-check/SKILL.md) (Google Fact Check Tools API).
 
-Pomiar z `scripts/build_corpus.py` (2026-11-21):
-
-| Miernik | Wymóg | Wynik |
-|---|---|---|
-| Dokumenty i rekordy | ≥ 100 | **658** |
-| Domeny (główne, np. `gov.pl`, `europa.eu`) | ≥ 10 | **10** (13 hostów) |
-| Typy źródeł | ≥ 2 | **4**: urzędowe 451, pomiary 107, akty prawne 60, fact-checking 40 |
-| Dokumenty z datą publikacji i pobrania | wymóg „Aktualność” | 656 z 658 |
-
-Odtworzenie wyniku:
-
-```bash
-python scripts/build_corpus.py
-```
-
-Wynik trafia do `data/corpus/` (`documents.jsonl` + `manifest.json`, poza repozytorium). Skrypt kończy się kodem 1, jeśli progi nie są spełnione.
-
-## Zasady kwalifikacji
-
-Źródło trafia do katalogu, gdy spełnia wszystkie warunki:
-
-1. **Wydawca jest wiarygodny:**
-   - **źródła pierwotne i urzędowe:** administracja rządowa (gov.pl), służby, instytuty pomiarowe (IMGW, GIOŚ), NBP, Dziennik Ustaw, instytucje UE i WHO,
-   - **źródła wtórne:** organizacje fact-checkingowe zweryfikowane według standardów IFCN lub EFCSN albo huby sieci EDMO.
-2. **Wolno pobierać treść:** `robots.txt` na to pozwala i serwis nie blokuje automatów. Nie obchodzimy zabezpieczeń (wymóg z sekcji 5 zadania).
-3. **Znamy podstawę prawną:** przechowujemy tylko tyle, ile pozwala licencja (pole `storage`):
-   - **pełny tekst** tylko przy jawnej licencji (gov.pl: CC BY-SA 4.0),
-   - **przy braku jawnej licencji:** tytuł, lead z RSS i link,
-   - **dane pomiarowe i akty prawne:** jako rekordy, bo dane urzędowe i akty normatywne nie są utworami.
-4. **Każdy dokument ma** wydawcę, tytuł, link, datę publikacji i datę pobrania.
-
-Status źródła ani domena nie przesądzają o prawdziwości konkretnego twierdzenia. Poziom (`tier`: 1 = urzędowe/pierwotne, 2 = wtórne) służy tylko do oceny siły dowodu.
-
-## Aktualizacja i wykluczanie
-
-- **Częstotliwość odświeżania:** pole `refresh`, od 1 godziny (ostrzeżenia, pomiary) do 1 dnia (akty prawne, raporty).
-- **Błędy pobierania:** błąd jednego źródła nie zatrzymuje budowy korpusu. Trafia do `manifest.json` i jest widoczny przy audycie.
-- **Wykluczenie:** źródło dostaje `status: EXCLUDED` z powodem w `exclusion_reason`, gdy:
-  - zabrania pobierania (`robots.txt`, HTTP 403),
-  - nie mamy licencji,
-  - przestaje spełniać zasady kwalifikacji.
-
-  Źródło wykluczone może zostać jako „sprawdź sam” (`role: REFERRAL`), ale nigdy nie jest dowodem.
-- **Nowe źródło:** wpis w `config/sources.yaml` plus jego adres w `config/whitelist.txt`, po sprawdzeniu punktów 1-4.
+Agent nie ma wyszukiwarki internetowej i nie przechowuje korpusu. Strony z listy pobiera na żywo w chwili sprawdzania, więc dowód jest aktualny na dzień pytania.
 
 ## Źródła aktywne
 
-| id | Wydawca | Typ | Poziom | Co przechowujemy | Dokumenty | Licencja / podstawa |
-|---|---|---|---|---|---|---|
-| `govpl-rcb` | Rządowe Centrum Bezpieczeństwa | urzędowe | 1 | pełny tekst | 20 | CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin) |
-| `govpl-msz` | Ministerstwo Spraw Zagranicznych | urzędowe | 1 | pełny tekst | 20 | CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin) |
-| `govpl-paa` | Państwowa Agencja Atomistyki | urzędowe | 1 | pełny tekst | 20 | CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin) |
-| `govpl-mswia` | Ministerstwo Spraw Wewnętrznych i Administracji | urzędowe | 1 | pełny tekst | 20 | CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin) |
-| `govpl-mon` | Ministerstwo Obrony Narodowej | urzędowe | 1 | pełny tekst | 28 | CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin) |
-| `govpl-sluzby-specjalne` | Ministerstwo Koordynator Służb Specjalnych | urzędowe | 1 | pełny tekst | 20 | CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin) |
-| `govpl-psp` | Komenda Główna Państwowej Straży Pożarnej | urzędowe | 1 | pełny tekst | 20 | CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin) |
-| `govpl-infrastruktura` | Ministerstwo Infrastruktury | urzędowe | 1 | pełny tekst | 20 | CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin) |
-| `govpl-gis` | Główny Inspektorat Sanitarny | urzędowe | 1 | pełny tekst | 20 | CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin) |
-| `govpl-zdrowie` | Ministerstwo Zdrowia | urzędowe | 1 | pełny tekst | 20 | CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin) |
-| `govpl-cyfryzacja` | Ministerstwo Cyfryzacji | urzędowe | 1 | pełny tekst | 20 | CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin) |
-| `govpl-klimat` | Ministerstwo Klimatu i Środowiska | urzędowe | 1 | pełny tekst | 10 | CC BY-SA 4.0 (https://www.gov.pl/web/gov/regulamin) |
-| `policja` | Komenda Główna Policji | urzędowe | 1 | tytuł + lead + link | 10 | informacja publiczna; brak jawnej licencji na treść - przechowujemy tylko tytuł, datę i link |
-| `cert-polska` | CERT Polska (NASK) | urzędowe | 1 | tytuł + lead + link | 100 | brak jawnej licencji na treść - przechowujemy tytuł, lead z RSS i link |
-| `ec-presscorner` | Komisja Europejska | urzędowe | 1 | tytuł + lead + link | 10 | CC BY 4.0 - decyzja Komisji 2011/833/UE (https://commission.europa.eu/legal-notice_pl) |
-| `ecdc` | Europejskie Centrum ds. Zapobiegania i Kontroli Chorób (ECDC) | urzędowe | 1 | tytuł + lead + link | 10 | CC BY 4.0 (https://www.ecdc.europa.eu/en/copyright) |
-| `who` | Światowa Organizacja Zdrowia (WHO) | urzędowe | 1 | tytuł + lead + link | 83 | brak jawnej licencji na treść stron - przechowujemy tytuł, lead z RSS i link (https://www.who.int/about/policies/publishing/copyright) |
-| `imgw-synop` | Instytut Meteorologii i Gospodarki Wodnej - PIB | pomiary | 1 | rekord danych | 62 | dane publiczne do ponownego wykorzystania, wymagane podanie źródła "IMGW-PIB" (https://danepubliczne.imgw.pl/) |
-| `gios-aq` | Główny Inspektorat Ochrony Środowiska | pomiary | 1 | rekord danych | 13 | dane publiczne Państwowego Monitoringu Środowiska, z podaniem źródła "GIOŚ" (https://powietrze.gios.gov.pl/) |
-| `nbp-kursy` | Narodowy Bank Polski | pomiary | 1 | rekord danych | 32 | kursy walut to dane urzędowe, nie utwór; publiczne API NBP (https://api.nbp.pl/) |
-| `sejm-eli` | Kancelaria Sejmu - Dziennik Ustaw (ELI API) | akty prawne | 1 | metadane | 60 | akty normatywne nie są przedmiotem prawa autorskiego (art. 4 ustawy o prawie autorskim) |
-| `pravda` | Stowarzyszenie Pravda (sygnatariusz IFCN, członek EFCSN) | fact-checking | 2 | tytuł + lead + link | 20 | brak jawnej licencji na treść - przechowujemy tytuł, lead z RSS i link |
-| `fakenews-pl` | FakeNews.pl - Fundacja "Przeciwdziałamy Dezinformacji" (sygnatariusz IFCN) | fact-checking | 2 | tytuł + lead + link | 10 | © fakenews.pl - przechowujemy tylko tytuł, lead z RSS i link |
-| `cedmo` | CEDMO - Central European Digital Media Observatory (hub EDMO) | fact-checking | 2 | tytuł + lead + link | 10 | brak jawnej licencji na treść - przechowujemy tytuł, lead z RSS i link |
+| Host | Wydawca | Typ | Co tam jest | Podstawa wykorzystania |
+|---|---|---|---|---|
+| `www.gov.pl` (19 stron) | KPRM, RCB, MSWiA, MSZ, MON, PSP, GIS, Ministerstwo Infrastruktury, Wody Polskie i inne | urzędowe | komunikaty, ostrzeżenia, raporty dobowe, informacje dla podróżnych | treści gov.pl na licencji CC BY-SA 4.0 ([regulamin](https://www.gov.pl/web/gov/regulamin)) |
+| `odyseusz.gov.pl` | MSZ | urzędowe | rejestracja podróży, ostrzeżenia dla podróżnych | informacja publiczna |
+| `www.prezydent.pl` | Kancelaria Prezydenta RP | urzędowe | aktualności, biografia, komunikaty | informacja publiczna |
+| `isap.sejm.gov.pl` | Kancelaria Sejmu | akty prawne | Dziennik Ustaw, Monitor Polski | akty normatywne nie są utworami (art. 4 ustawy o prawie autorskim) |
+| `policja.pl`, `mazowiecka.policja.gov.pl` | Komenda Główna Policji, KWP Radom | urzędowe | aktualności, komunikaty | informacja publiczna; cytujemy fragment z linkiem |
+| `kgsok.pl` | Komenda Główna Straży Ochrony Kolei | urzędowe | komunikaty i kronika interwencji | informacja publiczna; cytujemy fragment z linkiem |
+| `moje.cert.pl` | CERT Polska (NASK) | urzędowe | ostrzeżenia o zagrożeniach w sieci | brak jawnej licencji; cytujemy fragment z linkiem |
+| `monitoring.paa.gov.pl` | Państwowa Agencja Atomistyki | pomiary | moc dawki promieniowania | dane publiczne |
+| `powietrze.gios.gov.pl` | GIOŚ | pomiary | jakość powietrza | dane publiczne, z podaniem źródła „GIOŚ” |
+| `meteo.imgw.pl`, `hydro.imgw.pl`, `baltyk.imgw.pl` | IMGW-PIB | pomiary | pogoda, stany wód, warunki na Bałtyku, ostrzeżenia | dane publiczne, z podaniem źródła „IMGW-PIB” |
+| `drogi.gddkia.gov.pl` (3 strony) | GDDKiA | urzędowe | utrudnienia i informacja drogowa | informacja publiczna |
+| `ulc.gov.pl` (3 strony), `utk.gov.pl` | Urząd Lotnictwa Cywilnego, Urząd Transportu Kolejowego | urzędowe | prawa pasażerów, komunikaty | informacja publiczna |
+| `portalpasazera.pl` | PKP PLK | urzędowe | rozkłady i utrudnienia na kolei | regulamin serwisu; cytujemy fragment z linkiem |
+| `www.sar.gov.pl`, `www.umgdy.gov.pl`, `www.ums.gov.pl` | Morska Służba Poszukiwania i Ratownictwa, Urzędy Morskie w Gdyni i Szczecinie | urzędowe | bezpieczeństwo i warunki żeglugi | informacja publiczna |
+| `www.pap.pl` | Polska Agencja Prasowa | wiarygodne wtórne | depesze z kraju i ze świata | treści chronione prawem autorskim; tylko krótki cytat z linkiem (prawo cytatu, art. 29) |
+| `factchecktools.googleapis.com` | Google (dane ClaimReview od fact-checkerów) | wiarygodne wtórne | oceny twierdzeń przez organizacje fact-checkingowe | [warunki Google APIs](https://developers.google.com/terms); ocenę przypisujemy fact-checkerowi, który ją opublikował |
 
-## Źródła wykluczone z pobierania (tylko „sprawdź sam”)
+Razem: 21 hostów, w tym 2 źródła wtórne (PAP i oceny fact-checkerów), a reszta to źródła urzędowe i pomiarowe.
 
-| id | Wydawca | Powód |
-|---|---|---|
-| `consilium` | Rada Unii Europejskiej | robots.txt zwraca 403 - nie da się sprawdzić zgody na pobieranie, więc ostrożnie nie pobieramy |
-| `euvsdisinfo` | EUvsDisinfo (East StratCom Task Force, ESDZ) | robots.txt zabrania pobierania kanałów RSS (Disallow */feed/) - tylko link "sprawdź sam"; dostęp do bazy przez serwer MCP po uzgodnieniu z zespołem EUvsDisinfo |
-| `demagog` | Stowarzyszenie Demagog (sygnatariusz IFCN, członek EFCSN) | serwis blokuje automatyczne pobieranie (HTTP 403); nie obchodzimy zabezpieczeń - tylko link "sprawdź sam" |
-| `afp-sprawdzam` | AFP Sprawdzam (członek EFCSN) | serwis blokuje automatyczne pobieranie (HTTP 403); nie obchodzimy zabezpieczeń - tylko link "sprawdź sam" |
-| `konkret24` | Konkret24 (TVN24) | brak licencji na wykorzystanie treści - tylko link "sprawdź sam" |
+**Przechowywanie.** Nie budujemy kopii treści. W wyniku i w logu sprawdzeń zostaje tylko tytuł, wydawca, data publikacji, link i krótki dosłowny cytat. Log jest usuwany po 7 dniach.
+
+## Zasady kwalifikacji
+
+Źródło trafia na listę, gdy spełnia wszystkie warunki:
+
+1. **Wiarygodny wydawca:**
+   - źródła pierwotne: administracja rządowa i jej służby, instytuty pomiarowe, Dziennik Ustaw;
+   - źródła wtórne: agencja prasowa o wysokiej reputacji (PAP) albo organizacje fact-checkingowe, których oceny zbiera Google Fact Check (zwykle sygnatariusze IFCN lub EFCSN).
+2. **Związek z zadaniem:** bezpieczeństwo, ostrzeżenia, transport, pogoda i środowisko, komunikaty państwa, czyli tematy, w których krąży najwięcej fałszywych alarmów.
+3. **Wolno pobierać:** serwis nie blokuje automatów i nie wymaga logowania. Nie obchodzimy zabezpieczeń ani paywalli.
+4. **Stały adres hosta:** reguła bez `*` w nazwie hosta. Wzorzec typu `https://*.gov.pl/*` byłby niebezpieczny, bo `*` obejmuje też `/` i pasowałby do `https://obca-strona.com/x.gov.pl/`.
+
+Domena ani status wydawcy nie przesądzają o prawdziwości twierdzenia. Liczą się treść dokumentu, jego data i zgodność z twierdzeniem. Rodzaj źródła wpływa tylko na ocenę siły dowodu.
+
+## Aktualizacja i wykluczanie
+
+- **Aktualność:** strony są pobierane na żywo przy każdym sprawdzeniu, więc nie ma przestarzałej kopii. Agent porównuje datę publikacji z datą pytania i ostrzega o materiale archiwalnym.
+- **Dodanie źródła:** po sprawdzeniu punktów 1-4 dopisujemy regułę `webfetch` w `.opencode/opencode.jsonc` i opis strony w skillu `allowed-data-sources`. Backend od razu stosuje tę samą listę.
+- **Wykluczenie:** usuwamy regułę i opis, a powód zapisujemy w historii zmian (commit). Źródła wykluczone dotąd: Demagog i AFP Sprawdzam (blokują automaty, HTTP 403), Konkret24 (brak licencji na treść), EUvsDisinfo (robots.txt zabrania pobierania), Rada UE (robots.txt niedostępny).
+- **Błędy pobierania:** nieudane lub zablokowane pobranie jest liczone w logu sprawdzeń (`fetch_errors`). Agent obniża wtedy pewność albo wstrzymuje się od werdyktu.
+
+## Linki od użytkownika
+
+Agent pobiera wyłącznie strony z listy dozwolonych, także wtedy, gdy link przysłał użytkownik. To świadoma decyzja ze względów bezpieczeństwa:
+- nie pobieramy dowolnych adresów wskazanych z zewnątrz, w tym stron z ukrytymi instrukcjami dla modelu (prompt injection), adresów wewnętrznych i stron, które śledzą odwiedzających;
+- system nie łączy się z serwisami, których warunki korzystania nie są sprawdzone.
+
+Gdy link prowadzi poza listę (np. artykuł z portalu informacyjnego), system nie wydaje werdyktu. Zwraca status „Potrzebujemy doprecyzowania” z prośbą o wklejenie treści artykułu albo spornych cytatów. Wklejony tekst jest sprawdzany normalnie: agent wyodrębnia z niego twierdzenia i szuka dowodów w źródłach z listy.
+
+Link do strony z listy (np. komunikat na gov.pl) agent pobiera i sprawdza bezpośrednio.
 
 ## Ograniczenia
 
-- **Krótkie wpisy:** źródła bez jawnej licencji (CERT Polska, WHO, Policja, Pravda, FakeNews.pl, CEDMO) mają w korpusie tylko tytuł, lead i link. Dowód z nich wymaga otwarcia linku.
-- **Kanały blokowane:** dwie największe polskie organizacje fact-checkingowe blokują automaty (Demagog, AFP Sprawdzam), a Konkret24 wymaga licencji. Ich wyniki mogą trafiać do systemu przez Google Fact Check Tools API (wymaga klucza), które zbiera oznaczenia ClaimReview.
-- **Domena a host:** filtr w `app_simple` porównuje dokładny host. Cytat z innej subdomeny tego samego wydawcy (np. `ecdc.europa.eu` zamiast `www.ecdc.europa.eu`) zostanie odrzucony.
-
-## Serwisy gov.pl (lista dla skilla)
-
-[`config/govpl_whitelist.json`](../config/govpl_whitelist.json) zawiera wszystkie serwisy instytucji na www.gov.pl. Jeden wpis to jeden serwis (`https://www.gov.pl/web/<jednostka>`) i obejmuje wszystkie jego podstrony. Każdy wpis ma pola:
-- `linkDoStrony`,
-- `krótkiOpisZawartości` (nazwa jednostki, działalność, sekcje serwisu),
-- `tagi` (kategoria z katalogu gov.pl i tematy),
-- `licencja`.
-
-Źródło spisu: katalog jednostek gov.pl oraz serwisy, do których linkują strony jednostek (np. stacje powiatowe, komendy PSP). Adresy, które przekierowują na stronę główną gov.pl (nieistniejące serwisy), są pomijane. Odświeżenie:
-
-```bash
-python scripts/govpl_sites.py
-```
-
-Przebieg trwa ok. 20 minut, z przerwą 0,5 s między zapytaniami do gov.pl.
+- **Zakres tematów:** sprawy, o których nie piszą źródła z listy, kończą się „brakiem wystarczających dowodów”.
+- **Strony wymagające JavaScript** (np. mapy GDDKiA, wyszukiwarka ostrzeżeń gov.pl) mogą zwrócić niepełną treść.
+- **Google Fact Check:** skill i dostęp do API są dodane, ale agent nie ma jeszcze uprawnienia do tego skilla, a klucz API nie jest przekazywany serwerowi OpenCode (szczegóły w `docs/ARCHITEKTURA.md`).

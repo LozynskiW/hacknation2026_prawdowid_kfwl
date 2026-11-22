@@ -1,0 +1,538 @@
+/* Prawdowid - strona glowna: obserwujace oko (inspiracja: okladka "1984"),
+   pole pytania i jedna odpowiedz pod spodem. */
+
+:root {
+  --bg: #121110;
+  --panel: #1d1b19;
+  --panel-edge: #34302b;
+  --ink: #efe6d2;
+  --muted: #b3aa96;
+  --cream: #f3ecdc;
+  --cream-shade: #c9bea4;
+  --red: #c8102e;
+  --red-bright: #ff5a6e;
+  --red-dark: #7a0a1c;
+  --iris-dark: #1b1a18;
+
+  /* Kolory werdyktow - zawsze razem z tekstem i ikona, nigdy sam kolor. */
+  --v-confirmed: #6fd69a;
+  --v-false: #ff6b78;
+  --v-misleading: #f2b84b;
+  --v-insufficient: #a9bccd;
+  --v-not-checkable: #c9bea4;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  /* Oko i pole wysrodkowane w pionie, stopka na dole; odpowiedz rozpycha strone w dol. */
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(ellipse at 50% 25%, #2a2623 0%, var(--bg) 60%) no-repeat;
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+/* ---------- Naglowek z okiem ---------- */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: auto;
+  padding: 32px 16px 16px;
+  gap: 10px;
+}
+
+/* Oko rosnie razem z oknem, ale tak, zeby oko, tytul i pole zawsze miescily sie na ekranie
+   (ok. 360 px wysokosci zajmuje reszta; rysunek ma proporcje 400:308). */
+.eye {
+  margin: 0 0 12px;
+  width: clamp(240px, calc((100vh - 360px) * 1.3), 820px);
+  width: clamp(240px, calc((100dvh - 360px) * 1.3), 820px);
+  max-width: 100%;
+}
+
+.eye__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Kolor oka zalezy od stanu (atrybut data-mood ustawia static/js/eye.js):
+   spoczynek - niebieskie, pisanie i czekanie - zolte, wynik pozytywny - zielone,
+   negatywny - czerwone, pozostale - szare. Teczowka i promienie ("rzesy") zmieniaja kolor razem. */
+.eye {
+  --eye-iris: #2f7de1;
+  --eye-dark: #163d72;
+}
+.eye[data-mood="busy"]     { --eye-iris: #f2b84b; --eye-dark: #8a5d0e; }
+.eye[data-mood="positive"] { --eye-iris: #2fa866; --eye-dark: #14532f; }
+.eye[data-mood="negative"] { --eye-iris: var(--red); --eye-dark: var(--red-dark); }
+.eye[data-mood="neutral"]  { --eye-iris: #8d8a84; --eye-dark: #4a4743; }
+
+.eye__rays path,
+.eye__iris-base,
+.eye__iris-fibres {
+  transition: fill .6s ease, stroke .6s ease;
+}
+
+.eye__rays path {
+  fill: none;
+  stroke: var(--eye-iris);
+  stroke-width: 6;
+  stroke-linecap: square;
+}
+
+.eye__outline {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 8;
+  stroke-linejoin: round;
+}
+
+/* Miekki cien przy krawedzi powiek (rysowany wewnatrz oka). */
+.eye__lid-shadow {
+  fill: none;
+  stroke: #000;
+  stroke-opacity: .22;
+  stroke-width: 22;
+}
+
+.eye__iris-base { fill: var(--eye-iris); }
+
+/* Promieniste wlokna teczowki: gesto przerywany, gruby okrag. */
+.eye__iris-fibres {
+  fill: none;
+  stroke: var(--eye-dark);
+  stroke-width: 34;
+  stroke-dasharray: 2 4;
+}
+
+.eye__iris-ring {
+  fill: none;
+  stroke: var(--iris-dark);
+  stroke-width: 6;
+}
+
+.eye__pupil { fill: var(--iris-dark); }
+.eye__glint { fill: var(--cream); opacity: .9; }
+
+.hero__title {
+  margin: 0;
+  font-size: clamp(2.4rem, 8vw, 4.8rem);
+  font-weight: 900;
+  letter-spacing: .18em;
+  line-height: 1;
+  /* Odstep po ostatniej literze przesuwa napis w lewo - wyrownanie do srodka. */
+  padding-left: .18em;
+}
+
+.hero__tagline {
+  margin: 0;
+  font-size: clamp(.95rem, 2.4vw, 1.25rem);
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--red-bright);
+}
+
+/* ---------- Pytanie ---------- */
+
+.check {
+  width: min(960px, 100%);
+  margin: 0 auto auto;
+  padding: 16px 16px 40px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Pasek jak w czacie: zaokraglone pole i okragly przycisk wysylania w srodku. */
+.ask__bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px 8px 8px 24px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 32px;
+  background: var(--panel);
+  transition: max-width .25s ease, padding .25s ease, border-radius .25s ease, border-color .15s;
+}
+
+.ask__bar:focus-within { border-color: var(--muted); }
+
+/* Po kliknieciu w pole (i dopoki jest w nim tekst) pasek i czcionka rosna - wygodniej sie pisze i czyta. */
+.ask:focus-within .ask__bar,
+.ask:has(.ask__input:not(:placeholder-shown)) .ask__bar {
+  max-width: 100%;
+  padding: 12px 12px 12px 32px;
+  border-radius: 44px;
+}
+
+.ask__input {
+  flex: 1;
+  min-width: 0;
+  /* Jedna linia na start; wysokosc ustawia skrypt w miare pisania. */
+  height: 54px;
+  max-height: 300px;
+  padding: 8px 0;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.625rem;
+  line-height: 38px;
+  transition: font-size .2s ease, line-height .2s ease;
+}
+
+.ask:focus-within .ask__input,
+.ask:has(.ask__input:not(:placeholder-shown)) .ask__input {
+  font-size: 2rem;
+  line-height: 46px;
+}
+
+.ask__input::placeholder { color: #8a8274; }
+
+.ask__send {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  cursor: pointer;
+  transition: background .15s, opacity .15s, width .25s ease, height .25s ease;
+}
+
+.ask:focus-within .ask__send,
+.ask:has(.ask__input:not(:placeholder-shown)) .ask__send {
+  width: 56px;
+  height: 56px;
+}
+
+.ask__send svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ask__send:hover { background: #a50d26; }
+.ask__send:disabled { opacity: .35; cursor: default; }
+
+.ask__send:focus-visible {
+  outline: 3px solid var(--red-bright);
+  outline-offset: 2px;
+}
+
+/* W trakcie sprawdzania (klasa ask--busy ze skryptu w index.html): pole wyszarzone,
+   a zamiast strzalki kreci sie kolko ladowania. */
+.ask--busy .ask__bar {
+  border-color: var(--panel-edge);
+  background: #171513;
+}
+
+.ask--busy .ask__input {
+  color: #7d766a;
+  cursor: progress;
+}
+
+.ask__spinner {
+  display: none;
+  width: 22px;
+  height: 22px;
+  border: 3px solid rgba(255, 255, 255, .3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+.ask--busy .ask__send { opacity: 1; cursor: progress; }
+.ask--busy .ask__send svg { display: none; }
+.ask--busy .ask__spinner { display: block; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Przy ograniczeniu animacji kolko nadal sie kreci (to wskaznik pracy), ale wolniej. */
+@media (prefers-reduced-motion: reduce) {
+  .ask__spinner { animation-duration: 2.4s; }
+}
+
+/* Komunikat "Sprawdzam..." widoczny tylko w trakcie zapytania HTMX. */
+.ask__busy {
+  display: none;
+  margin: 24px 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 2rem;
+}
+.ask__busy.htmx-request { display: block; }
+
+/* Hasla zmieniaja sie jak kostka przewrocona do tylu: stara scianka odjezdza gora w glab,
+   a dopiero potem nowa wjezdza od dolu - nigdy nie sa widoczne obie naraz. */
+.thinking {
+  position: relative;
+  display: block;
+  height: 1.6em;
+  overflow: hidden;      /* kadr: widac tylko jedna linie, scianki nie nachodza na siebie */
+  perspective: 700px;
+}
+
+.thinking__face {
+  position: absolute;
+  inset: 0;
+  line-height: 1.6em;
+  white-space: nowrap;
+  backface-visibility: hidden;
+}
+
+.thinking__face--out { animation: cube-out .3s ease-in forwards; }
+/* Opoznienie = czas wyjazdu starej scianki; do tego czasu nowa jest niewidoczna (both). */
+.thinking__face--in  { animation: cube-in .35s ease-out .3s both; }
+
+/* Stara scianka odjezdza w gore i odchyla sie w glab, nowa wjezdza od dolu. */
+@keyframes cube-out {
+  from { transform: translateY(0) rotateX(0); opacity: 1; }
+  to   { transform: translateY(-100%) rotateX(80deg); opacity: 0; }
+}
+
+@keyframes cube-in {
+  from { transform: translateY(100%) rotateX(-80deg); opacity: 0; }
+  to   { transform: translateY(0) rotateX(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking__face--out, .thinking__face--in { animation: none; }
+}
+
+/* ---------- Odpowiedz (templates/result.html) ---------- */
+
+.answer:empty { display: none; }
+.answer { margin-top: 24px; }
+
+.result {
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 16px;
+  padding: 28px 32px;
+  /* Wieksza czcionka i odstepy - odpowiedz ma sie czytac bez wysilku. */
+  font-size: 1.875rem;
+  line-height: 1.55;
+  animation: answer-in .35s ease-out;
+}
+
+/* Karta odpowiedzi wysuwa sie lagodnie, gdy przychodzi odpowiedz. */
+@keyframes answer-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result { animation: none; }
+}
+
+.result__question {
+  margin: 0 0 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--panel-edge);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.result__question span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: .75em;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.result__status { margin: 0; }
+
+.result__text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.result__handoff {
+  margin: 20px 0 0;
+  padding: 14px 18px;
+  border: 1px dashed var(--v-misleading);
+  border-radius: 8px;
+  color: var(--v-misleading);
+}
+
+/* Stopka wyniku: ograniczenia i usuniecie sprawdzenia z logu. */
+.result__footer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--panel-edge);
+  font-size: .7em;
+  line-height: 1.5;
+  color: var(--muted);
+  text-align: center;
+}
+.result__limits { margin: 0 auto 6px; max-width: 46em; }
+/* "Usun teraz" wyglada jak link na koncu zdania - ten sam krok pisma co reszta stopki, bez ramki. */
+.result__forget { margin: 0 auto; max-width: 46em; }
+.result__forget button {
+  display: inline;
+  margin: 0 0 0 .25em;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--red-bright);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 90, 110, .45);
+  text-underline-offset: .2em;
+  cursor: pointer;
+}
+.result__forget button:hover,
+.result__forget button:focus-visible { text-decoration-color: currentColor; outline: none; }
+.result__deleted { margin: 0; color: var(--ink); }
+
+.result__summary h2,
+.result__notice-title {
+  margin: 0 0 8px;
+  font-size: 1.3em;
+  line-height: 1.3;
+}
+
+.result__summary p { margin: 0; }
+.result__summary .result__tally { margin-top: 8px; font-size: .9em; color: var(--muted); }
+
+/* Statusy niewerdyktowe: przerywana ramka zamiast koloru werdyktu. */
+.result--notice { border-style: dashed; border-color: var(--muted); }
+.result__notice-text { margin: 0; }
+
+.claim {
+  margin-top: 20px;
+  padding: 22px 24px;
+  border-radius: 12px;
+  background: var(--bg);
+  border-left: 5px solid var(--v, var(--muted));
+}
+
+.claim--confirmed     { --v: var(--v-confirmed); }
+.claim--false         { --v: var(--v-false); }
+.claim--misleading    { --v: var(--v-misleading); }
+.claim--insufficient  { --v: var(--v-insufficient); }
+.claim--not-checkable { --v: var(--v-not-checkable); }
+
+.claim__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 1.05em;
+  font-weight: 800;
+  color: var(--v, var(--ink));
+}
+
+.claim__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  background: var(--v, var(--muted));
+  color: var(--bg);
+  font-size: .9em;
+}
+
+.claim__confidence {
+  margin-left: 4px;
+  font-size: .8em;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.claim__text { margin: 0 0 16px; font-size: 1.2em; line-height: 1.4; }
+
+/* Krotka odpowiedz skilla - pierwsza rzecz do przeczytania pod twierdzeniem. */
+.claim__answer { margin: 0 0 16px; font-weight: 700; }
+
+.claim__meaning {
+  padding: 14px 18px;
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.claim__meaning h4,
+.claim__heading {
+  margin: 20px 0 8px;
+  font-size: .78em;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.claim__meaning h4 { margin-top: 0; }
+.claim__meaning p { margin: 0; }
+
+.sources { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+
+.source {
+  padding: 14px 18px;
+  border: 1px solid var(--panel-edge);
+  border-radius: 8px;
+}
+
+.source__title { color: var(--ink); font-weight: 700; overflow-wrap: anywhere; }
+.source__meta { margin: 4px 0 0; font-size: .9em; color: var(--muted); }
+
+.source__quote {
+  margin: 10px 0 0;
+  padding-left: 14px;
+  border-left: 3px solid var(--panel-edge);
+  font-style: italic;
+}
+
+.claim__list { margin: 0; padding-left: 24px; }
+.claim__list li + li { margin-top: 4px; }
+
+/* Na telefonie mniej miejsca w poziomie - mniejsze odstepy, czcionka nadal duza. */
+@media (max-width: 520px) {
+  .result { padding: 20px 18px; font-size: 1.5rem; }
+  .ask__busy { font-size: min(1.3125rem, 4.8vw); }  /* najdluzsze haslo miesci sie w jednej linii */
+  .ask__input { font-size: 1.375rem; line-height: 34px; height: 50px; }
+  .ask:focus-within .ask__input,
+  .ask:has(.ask__input:not(:placeholder-shown)) .ask__input { font-size: 1.75rem; line-height: 40px; }
+  .claim { padding: 16px; }
+}
+
+/* ---------- Stopka ---------- */
+
+.footer {
+  padding: 0 16px 32px;
+  text-align: center;
+  font-size: .8rem;
+  color: var(--muted);
+}
+
+.footer p { max-width: 40rem; margin: 0 auto; }
