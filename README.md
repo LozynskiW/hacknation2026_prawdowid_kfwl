@@ -81,6 +81,34 @@ Bot Discorda (opis konfiguracji: [src/prawdowid/discord_bot/README.md](src/prawd
 python -m prawdowid.discord_bot
 ```
 
+## Docker (jedno polecenie)
+
+Wymagany Docker z Compose (np. Docker Desktop) i uzupełniony plik `.env` w katalogu głównym, taki sam jak wyżej. Do `.env` dla bota dopisz `DISCORD_TOKEN` i `BOT_USER_SALT`. Python ani OpenCode nie są potrzebne na komputerze, bo są w obrazie.
+
+```bash
+docker compose up --build
+```
+
+Uruchamia dwa kontenery:
+- `app`: strona WWW i API pod http://localhost:8000 oraz agent OpenCode;
+- `bot`: bot Discorda, który łączy się z `app` w sieci Dockera i startuje, gdy `app` jest gotowy.
+
+Przydatne warianty:
+
+| Co | Polecenie |
+|---|---|
+| Tylko strona i API, bez bota | `docker compose up --build app` |
+| Inny port strony | `PRAWDOWID_PORT=8080 docker compose up --build` |
+| Praca w tle i logi | `docker compose up -d --build`, potem `docker compose logs -f` |
+| Zatrzymanie | `docker compose down` (log sprawdzeń zostaje w wolumenie `prawdowid-data`) |
+| Zatrzymanie i usunięcie danych | `docker compose down -v` |
+
+Podgląd logu sprawdzeń (`/api/v1/log`) z przeglądarki wymaga `ADMIN_TOKEN` w `.env`, bo dla backendu w kontenerze przeglądarka nie jest „tym samym komputerem”. Bez tokenu można go odczytać z wnętrza kontenera:
+
+```bash
+docker compose exec app python -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/log').read().decode())"
+```
+
 ## Log sprawdzeń i prywatność
 
 Każde sprawdzenie (strona i Discord) trafia do `data/prawdowid.db` (SQLite, poza repozytorium). Zapisujemy:
